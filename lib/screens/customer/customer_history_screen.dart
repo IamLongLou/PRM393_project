@@ -3,16 +3,22 @@ import '../../models/customer.dart';
 import '../../models/bill.dart';
 import '../../services/billing_service.dart';
 import 'meter_reading_screen.dart';
+import 'edit_customer_screen.dart';
 
 /// Màn hình Chi tiết hóa đơn tiền nước - Bắt chước mẫu Hóa đơn điện tử (Ảnh 2)
-class CustomerHistoryScreen extends StatelessWidget {
+class CustomerHistoryScreen extends StatefulWidget {
   final Customer customer;
 
   const CustomerHistoryScreen({super.key, required this.customer});
 
   @override
+  State<CustomerHistoryScreen> createState() => _CustomerHistoryScreenState();
+}
+
+class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
+  @override
   Widget build(BuildContext context) {
-    final history = BillingService.getHistory(customer.id);
+    final history = BillingService.getHistory(widget.customer.id);
     // Giả sử lấy hóa đơn gần nhất để hiển thị chi tiết
     final bill = history.last;
 
@@ -24,12 +30,28 @@ class CustomerHistoryScreen extends StatelessWidget {
         title: const Text("Chi tiết hóa đơn tiền nước", 
           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditCustomerScreen(customer: widget.customer),
+                ),
+              );
+              if (result == true) {
+                setState(() {}); // Refresh UI sau khi chỉnh sửa
+              }
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => MeterReadingScreen(customer: customer)),
+            MaterialPageRoute(builder: (context) => MeterReadingScreen(customer: widget.customer)),
           );
         },
         label: const Text("Ghi chỉ số mới"),
@@ -77,7 +99,7 @@ class CustomerHistoryScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text("Khách hàng", style: TextStyle(fontSize: 16)),
-                    Text(customer.name, 
+                    Text(widget.customer.name, 
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF007BC3))),
                   ],
                 ),
@@ -88,6 +110,20 @@ class CustomerHistoryScreen extends StatelessWidget {
                     const Text("Mã hóa đơn", style: TextStyle(fontSize: 14, color: Colors.grey)),
                     Text("HD${bill.id}", 
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Địa chỉ", style: TextStyle(fontSize: 14, color: Colors.grey)),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Text(widget.customer.address, 
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    ),
                   ],
                 ),
               ],
