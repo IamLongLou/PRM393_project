@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../models/customer.dart';
-import '../../models/bill.dart';
-import '../../services/billing_service.dart';
-import 'collection_summary_screen.dart';
+import 'photo_capture_screen.dart';
 
-/// Màn hình Ghi chỉ số (Step 1: Ghi nhận dữ liệu)
 class MeterReadingScreen extends StatefulWidget {
   final Customer customer;
   const MeterReadingScreen({super.key, required this.customer});
@@ -14,210 +12,167 @@ class MeterReadingScreen extends StatefulWidget {
 }
 
 class _MeterReadingScreenState extends State<MeterReadingScreen> {
-  final _readingController = TextEditingController();
-  int _consumption = 0;
-  double _totalAmount = 0;
+  String _newReadingText = "";
 
-  void _calculate(String value) {
-    int newReading = int.tryParse(value) ?? 0;
-    if (newReading >= widget.customer.oldReading) {
-      setState(() {
-        _consumption = newReading - widget.customer.oldReading;
-        _totalAmount = BillingService.calculateAmount(_consumption);
-      });
+  void _onKeyTap(String key) {
+    if (key == "del") {
+      if (_newReadingText.isNotEmpty) {
+        setState(() => _newReadingText = _newReadingText.substring(0, _newReadingText.length - 1));
+      }
     } else {
-      setState(() {
-        _consumption = 0;
-        _totalAmount = 0;
-      });
+      if (_newReadingText.length < 5) {
+        setState(() => _newReadingText += key);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final String monthYear = DateFormat('MM/yyyy').format(DateTime.now());
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Nhập chỉ số nước")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Thông tin mô tả quy trình
-            _buildStepIndicator(),
-            const SizedBox(height: 20),
-            
-            // Thông tin khách hàng
-            _buildCustomerHeader(),
-            const SizedBox(height: 20),
-            
-            // Form nhập liệu
-            _buildReadingForm(),
-            const SizedBox(height: 20),
-            
-            // Chụp ảnh (Bằng chứng offline)
-            _buildPhotoSection(),
-            const SizedBox(height: 30),
-            
-            // Tóm tắt nhanh Business Rule
-            if (_consumption > 0) _buildQuickSummary(),
-            
-            const SizedBox(height: 40),
-            
-            // Navigation: Chuyển dữ liệu sang trang Summary
-            _buildNextButton(context),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPhotoSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("CHỤP ẢNH ĐỒNG HỒ (BẮT BUỘC)", 
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
-        const SizedBox(height: 10),
-        InkWell(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Đang mở camera chụp ảnh..."))
-            );
-          },
-          child: Container(
-            height: 120,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.camera_alt, size: 40, color: Colors.blue[300]),
-                const SizedBox(height: 5),
-                const Text("Nhấn để chụp ảnh", style: TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStepIndicator() {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.orange[50],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.wifi_off, color: Colors.orange, size: 18),
-          SizedBox(width: 8),
-          Text("CHẾ ĐỘ NGOẠI TUYẾN (OFFLINE)", 
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange, fontSize: 12)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCustomerHeader() {
-    return Card(
-      child: ListTile(
-        leading: const CircleAvatar(child: Icon(Icons.person)),
-        title: Text(widget.customer.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("Địa chỉ: ${widget.customer.address}\nChỉ số cũ: ${widget.customer.oldReading} m³"),
-        isThreeLine: true,
-      ),
-    );
-  }
-
-  Widget _buildReadingForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("CHỈ SỐ HIỆN TẠI (GHI TRÊN ĐỒNG HỒ)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
-        const SizedBox(height: 10),
-        TextField(
-          controller: _readingController,
-          keyboardType: TextInputType.number,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue),
-          decoration: InputDecoration(
-            hintText: "0000",
-            suffixText: "m³",
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-            filled: true,
-            fillColor: Colors.blue[50]!.withOpacity(0.3),
-          ),
-          onChanged: _calculate,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickSummary() {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildQuickStat("TIÊU THỤ", "$_consumption m³"),
-          _buildQuickStat("TẠM TÍNH", "${_totalAmount.toStringAsFixed(0)} đ"),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickStat(String label, String value) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-      ],
-    );
-  }
-
-  Widget _buildNextButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 55,
-      child: ElevatedButton(
-        onPressed: _consumption <= 0 ? null : () {
-          final bill = Bill(
-            id: DateTime.now().millisecondsSinceEpoch,
-            customerId: widget.customer.id,
-            month: DateTime.now(),
-            oldReading: widget.customer.oldReading,
-            newReading: int.parse(_readingController.text),
-            totalAmount: _totalAmount,
-            isPaid: true, // Thanh toán ngay tại chỗ
-          );
-          
-          // Chuyển dữ liệu sang trang Summary
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CollectionSummaryScreen(
-                customer: widget.customer,
-                bill: bill,
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(title: const Text('Ghi chỉ số')),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(children: [const Icon(Icons.calendar_month, size: 16, color: Colors.grey), const SizedBox(width: 5), Text('THÁNG $monthYear', style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.bold))]),
+                          Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: const Row(children: [Icon(Icons.wifi, size: 12, color: Colors.blue), SizedBox(width: 4), Text('Đồng hồ nước', style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold))])),
+                        ],
+                      ),
+                    ),
+                    _buildUserHeader(),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          _readingInputBox('CHỈ SỐ CŨ', '${widget.customer.currentReading}', isOld: true),
+                          const SizedBox(width: 15),
+                          _readingInputBox('CHỈ SỐ MỚI', _newReadingText.isEmpty ? "0000" : _newReadingText, isOld: false),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Vui lòng nhập chỉ số mới từ mặt đồng hồ khách hàng', style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic)),
+                    const Spacer(),
+                    _buildNumericKeypad(),
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: ElevatedButton(
+                        onPressed: _newReadingText.isEmpty ? null : () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => PhotoCaptureScreen(customer: widget.customer, newReading: int.parse(_newReadingText))));
+                        },
+                        style: ElevatedButton.styleFrom(backgroundColor: _newReadingText.isEmpty ? Colors.grey[200] : Colors.blue, foregroundColor: _newReadingText.isEmpty ? Colors.grey : Colors.white),
+                        child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text('Tiếp tục'), SizedBox(width: 10), Icon(Icons.arrow_forward, size: 18)]),
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
           );
-        },
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("XEM CHI TIẾT & THU TIỀN"),
-            SizedBox(width: 10),
-            Icon(Icons.arrow_forward),
-          ],
+        }
+      ),
+    );
+  }
+
+  Widget _buildUserHeader() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withValues(alpha: 0.1))),
+      child: Row(
+        children: [
+          CircleAvatar(radius: 25, backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=${widget.customer.id}')),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.customer.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('# PE120005678', style: TextStyle(color: Colors.grey, fontSize: 11)),
+              ],
+            ),
+          ),
+          Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.qr_code_scanner, size: 20, color: Colors.blue)),
+        ],
+      ),
+    );
+  }
+
+  Widget _readingInputBox(String label, String value, {required bool isOld}) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(color: isOld ? Colors.grey : Colors.blue, fontSize: 11, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Container(
+            height: 80,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isOld ? Colors.grey[100] : Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: isOld ? Colors.transparent : Colors.blue, width: 2),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(value, style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: isOld ? Colors.grey[600] : Colors.black87)),
+                const SizedBox(width: 4),
+                const Text('m³', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNumericKeypad() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Column(
+        children: [
+          _keyRow(["1", "2", "3"]),
+          _keyRow(["4", "5", "6"]),
+          _keyRow(["7", "8", "9"]),
+          _keyRow([".", "0", "del"]),
+        ],
+      ),
+    );
+  }
+
+  Widget _keyRow(List<String> keys) => Row(
+    children: keys.map((k) => Expanded(child: _keyButton(k))).toList(),
+  );
+
+  Widget _keyButton(String k) {
+    if (k == ".") return const Center(child: CircleAvatar(radius: 3, backgroundColor: Colors.grey));
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: InkWell(
+        onTap: () => _onKeyTap(k),
+        child: Container(
+          height: 55,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5)]),
+          child: k == "del" 
+              ? const Icon(Icons.backspace_outlined, color: Colors.redAccent, size: 20)
+              : Text(k, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         ),
       ),
     );

@@ -1,0 +1,136 @@
+import 'package:flutter/material.dart';
+import '../../services/customer_service.dart';
+import '../../models/customer.dart';
+
+class DashboardScreen extends StatefulWidget {
+  final Function(int) onNavigate;
+  const DashboardScreen({super.key, required this.onNavigate});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int pendingTasks = 0;
+  int completedTasks = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    final all = await CustomerService.getCustomers();
+    if (mounted) {
+      setState(() {
+        completedTasks = all.where((c) => c.status == CollectionStatus.completed).length;
+        pendingTasks = all.length - completedTasks;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // User Info Layout
+              Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 25,
+                    backgroundColor: Color(0xFF5D9CEC),
+                    child: Icon(Icons.person, color: Colors.white),
+                  ),
+                  const SizedBox(width: 15),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Nhân viên thu tiền", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      const Text("Nguyễn Văn A", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
+              
+              // Tóm tắt trạng thái Offline
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFF5D9CEC), Color(0xFF4FC1E9)]),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.cloud_off_rounded, color: Colors.white, size: 40),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text("Chế độ ngoại tuyến", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          Text("Có $pendingTasks công việc chưa hoàn thành", style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              const Text("Menu Nghiệp vụ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 20),
+
+              // Grid Menu điều hướng
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 15,
+                crossAxisSpacing: 15,
+                children: [
+                  _menuItem(Icons.people_alt_rounded, "Khách hàng", const Color(0xFF48CFAD), () => widget.onNavigate(0)),
+                  _menuItem(Icons.sync_rounded, "Đồng bộ", const Color(0xFFAC92EC), () => Navigator.pushNamed(context, "/sync")),
+                  _menuItem(Icons.pie_chart_rounded, "Thống kê", const Color(0xFF5D9CEC), () => widget.onNavigate(1)),
+                  _menuItem(Icons.account_circle_rounded, "Hồ sơ", const Color(0xFFFC6E51), () => widget.onNavigate(2)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _menuItem(IconData icon, String label, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 5))],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: 30),
+            ),
+            const SizedBox(height: 12),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          ],
+        ),
+      ),
+    );
+  }
+}

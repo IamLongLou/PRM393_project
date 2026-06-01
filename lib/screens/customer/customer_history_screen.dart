@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/customer.dart';
-import '../../models/bill.dart';
-import '../../services/billing_service.dart';
+import '../../providers/billing_provider.dart';
 import 'meter_reading_screen.dart';
-import 'edit_customer_screen.dart';
+import 'package:intl/intl.dart';
 
-/// Màn hình Chi tiết hóa đơn tiền nước - Bắt chước mẫu Hóa đơn điện tử (Ảnh 2)
 class CustomerHistoryScreen extends StatefulWidget {
   final Customer customer;
-
   const CustomerHistoryScreen({super.key, required this.customer});
 
   @override
@@ -17,246 +15,225 @@ class CustomerHistoryScreen extends StatefulWidget {
 
 class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
   @override
+  void initState() {
+    super.initState();
+    context.read<BillingProvider>().fetchBillsByCustomer(widget.customer.id ?? 1);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final history = BillingService.getHistory(widget.customer.id);
-    // Giả sử lấy hóa đơn gần nhất để hiển thị chi tiết
-    final bill = history.last;
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF007BC3), // Màu xanh đặc trưng của EVN/VNPAY
-        elevation: 0,
-        title: const Text("Chi tiết hóa đơn tiền nước", 
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EditCustomerScreen(customer: widget.customer),
-                ),
-              );
-              if (result == true) {
-                setState(() {}); // Refresh UI sau khi chỉnh sửa
-              }
-            },
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => MeterReadingScreen(customer: widget.customer)),
-          );
-        },
-        label: const Text("Ghi chỉ số mới"),
-        icon: const Icon(Icons.edit_note),
-        backgroundColor: Colors.blue[700],
-      ),
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(title: const Text('Lịch sử hóa đơn')),
       body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Khung thông tin tổng quát hóa đơn (Bắt chước Image 2)
-            _buildMainInfoCard(bill),
-
-            const Padding(
-              padding: EdgeInsets.only(left: 16, top: 20, bottom: 8),
-              child: Text("Chi tiết tiền nước", 
-                style: TextStyle(color: Color(0xFF007BC3), fontSize: 16, fontWeight: FontWeight.bold)),
+            _buildCustomerHeader(),
+            _buildQuickStats(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              child: Row(
+                children: [
+                  const Icon(Icons.access_time, size: 16, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  const Text('Danh sách kỳ thanh toán', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const Spacer(),
+                  Text('${context.watch<BillingProvider>().customerBills.length} bản ghi', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                ],
+              ),
             ),
-
-            // 2. Bảng chi tiết tính toán (Bắt chước Image 2)
-            _buildDetailedPriceTable(bill),
-            
-            const SizedBox(height: 80), // Thêm khoảng trống để không bị nút FAB che khuất
+            Consumer<BillingProvider>(
+              builder: (context, provider, child) {
+                final bills = provider.customerBills;
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  itemCount: bills.length,
+                  itemBuilder: (context, index) {
+                    final bill = bills[index];
+                    return _buildBillCard(bill, currencyFormat);
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+            _buildInfoNote(),
+            const SizedBox(height: 50),
           ],
         ),
+      ),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildCustomerHeader() {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withOpacity(0.1))),
+      child: Row(
+        children: [
+          CircleAvatar(radius: 25, backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=${widget.customer.id}')),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.customer.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('123 Đường Lê Lợi, Quận 1, TP.HCM', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(5)),
+                  child: const Text('MÃ KH: KH-99210', style: TextStyle(color: Colors.blue, fontSize: 9, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMainInfoCard(Bill bill) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[400]!),
-        borderRadius: BorderRadius.circular(8),
+  Widget _buildQuickStats() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          _statBox('Trung bình', '15.2 m³', Colors.green),
+          const SizedBox(width: 15),
+          _statBox('Tổng nợ', '185.000đ', Colors.blue),
+        ],
       ),
+    );
+  }
+
+  Widget _statBox(String label, String value, Color color) => Expanded(
+    child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: color.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.1))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(value, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildBillCard(bill, NumberFormat format) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withOpacity(0.1))),
       child: Column(
         children: [
-          // Tên khách hàng
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.blue.withOpacity(0.05), shape: BoxShape.circle), child: const Icon(Icons.calendar_month, color: Colors.blue, size: 18)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Tháng ${bill.date.month}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text('${bill.date.year}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                    ],
+                  ),
+                ),
+                Text(bill.isSynced ? 'Đã thanh toán' : 'Chưa ghi', style: TextStyle(color: bill.isSynced ? Colors.black87 : Colors.grey, fontSize: 11, fontWeight: FontWeight.bold)),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(15),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("Khách hàng", style: TextStyle(fontSize: 16)),
-                    Text(widget.customer.name, 
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF007BC3))),
+                    _readingCol('CHỈ SỐ ĐẦU', '${bill.oldReading} m³'),
+                    _readingCol('CHỈ SỐ CUỐI', '${bill.newReading} m³'),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 15),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("Mã hóa đơn", style: TextStyle(fontSize: 14, color: Colors.grey)),
-                    Text("HD${bill.id}", 
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Địa chỉ", style: TextStyle(fontSize: 14, color: Colors.grey)),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Text(widget.customer.address, 
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      decoration: BoxDecoration(color: Colors.blue.withOpacity(0.05), borderRadius: BorderRadius.circular(10)),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.water_drop, color: Colors.blue, size: 14),
+                          const SizedBox(width: 8),
+                          const Text('Tiêu thụ', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                          const SizedBox(width: 8),
+                          Text('${bill.consumption.toInt()} m³', style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text('Thành tiền', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                        Text(format.format(bill.totalAmount), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      ],
                     ),
                   ],
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, thickness: 1),
-          // Header hóa đơn
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Hóa đơn", style: TextStyle(fontSize: 16)),
-                Text("Kỳ ${bill.month.month} năm ${bill.month.year}", 
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
-          const Divider(height: 1, thickness: 1),
-          // Từ ngày - Đến ngày
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildSubInfo("Từ ngày", "01/${bill.month.month}/${bill.month.year}"),
-                _buildSubInfo("Đến ngày", "30/${bill.month.month}/${bill.month.year}", alignRight: true),
-              ],
-            ),
-          ),
-          const Divider(height: 1, thickness: 1),
-          // Chỉ số cũ - Chỉ số mới - Tiêu thụ
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              children: [
-                Expanded(child: _buildSubInfo("Chỉ số cũ", bill.oldReading.toString())),
-                Expanded(child: _buildSubInfo("Chỉ số mới", bill.newReading.toString(), center: true)),
-                Expanded(child: _buildSubInfo("Tiêu thụ", bill.consumption.toString(), alignRight: true)),
-              ],
-            ),
-          ),
-          const Divider(height: 1, thickness: 1),
-          // Giá biểu - Định mức
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildSubInfo("Giá biểu", "11"),
-                _buildSubInfo("Định mức", "12", alignRight: true),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildDetailedPriceTable(Bill bill) {
+  Widget _readingCol(String label, String value) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 4),
+      Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+    ],
+  );
+
+  Widget _buildInfoNote() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(2),
-          1: FlexColumnWidth(1.2),
-          2: FlexColumnWidth(1.5),
-          3: FlexColumnWidth(1.5),
-        },
-        border: TableBorder.all(color: Colors.grey[400]!, width: 1),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(10)),
+      child: const Row(
         children: [
-          // Dòng tiêu đề bảng
-          TableRow(
-            children: [
-              _buildCell(""),
-              _buildCell("Tiêu thụ m³", isHeader: true),
-              _buildCell("Đơn giá (đ)", isHeader: true),
-              _buildCell("Thành tiền (đ)", isHeader: true),
-            ],
-          ),
-          // Dòng Tiền nước
-          TableRow(
-            children: [
-              _buildCell("Tiền nước", isHeader: true, alignLeft: true),
-              _buildCell(bill.consumption.toString()),
-              _buildCell("6.700"),
-              _buildCell(_formatMoney(bill.consumption * 6700)),
-            ],
-          ),
-          // Dòng TDVTN (Thuế/Phí dịch vụ)
-          TableRow(
-            children: [
-              _buildCell("TDVTN", isHeader: true, alignLeft: true),
-              _buildCell(bill.consumption.toString()),
-              _buildCell("1.005"),
-              _buildCell(_formatMoney(bill.consumption * 1005)),
-            ],
-          ),
+          Icon(Icons.info_outline, size: 16, color: Colors.grey),
+          const SizedBox(width: 10),
+          Expanded(child: Text('Mẹo: Nhấn vào thẻ hóa đơn bất kỳ để cập nhật hoặc ghi mới chỉ số nước cho kỳ hiện tại.', style: TextStyle(fontSize: 10, color: Colors.grey))),
         ],
       ),
     );
   }
 
-  Widget _buildSubInfo(String label, String value, {bool alignRight = false, bool center = false, bool isBold = false}) {
-    return Column(
-      crossAxisAlignment: alignRight ? CrossAxisAlignment.end : (center ? CrossAxisAlignment.center : CrossAxisAlignment.start),
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-        const SizedBox(height: 4),
-        Text(value, style: TextStyle(fontSize: 15, fontWeight: isBold ? FontWeight.bold : FontWeight.w500)),
+  Widget _buildBottomNav() {
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      currentIndex: 0,
+      selectedItemColor: Colors.blue,
+      unselectedItemColor: Colors.grey,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Khách hàng'),
+        BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: 'Lịch trình'),
+        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Cá nhân'),
       ],
-    );
-  }
-
-  Widget _buildCell(String text, {bool isHeader = false, bool alignLeft = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: Text(
-        text,
-        textAlign: alignLeft ? TextAlign.left : TextAlign.center,
-        style: TextStyle(
-          fontSize: 13,
-          color: isHeader && alignLeft ? const Color(0xFF007BC3) : Colors.black,
-          fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
-    );
-  }
-
-  String _formatMoney(num amount) {
-    return amount.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
     );
   }
 }

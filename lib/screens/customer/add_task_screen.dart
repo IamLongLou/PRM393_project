@@ -2,24 +2,18 @@ import 'package:flutter/material.dart';
 import '../../models/customer.dart';
 import '../../services/customer_service.dart';
 
-class EditCustomerScreen extends StatefulWidget {
-  final Customer customer;
-  const EditCustomerScreen({super.key, required this.customer});
+class AddTaskScreen extends StatefulWidget {
+  const AddTaskScreen({super.key});
 
   @override
-  State<EditCustomerScreen> createState() => _EditCustomerScreenState();
+  State<AddTaskScreen> createState() => _AddTaskScreenState();
 }
 
-class _EditCustomerScreenState extends State<EditCustomerScreen> {
-  late TextEditingController _nameController;
-  late TextEditingController _addressController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.customer.name);
-    _addressController = TextEditingController(text: widget.customer.address);
-  }
+class _AddTaskScreenState extends State<AddTaskScreen> {
+  final _nameController = TextEditingController();
+  final _codeController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _readingController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +21,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
-          "Chỉnh sửa công việc", 
+          "Thêm công việc mới", 
           style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: Colors.transparent,
@@ -44,21 +38,24 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildFieldLabel("Tên công việc"),
-            _buildTextField(_nameController, "Học Flutter"),
+            _buildTextField(_nameController, "Nhập tên công việc"),
             const SizedBox(height: 20),
             
-            _buildFieldLabel("Mô tả"),
-            _buildTextField(_addressController, "Nhập mô tả chi tiết...", maxLines: 3),
+            _buildFieldLabel("Mã khách hàng"),
+            _buildTextField(_codeController, "Ví dụ: KH007"),
+            const SizedBox(height: 20),
+
+            _buildFieldLabel("Mô tả / Địa chỉ"),
+            _buildTextField(_addressController, "Nhập mô tả hoặc địa chỉ", maxLines: 3),
+            const SizedBox(height: 20),
+            
+            _buildFieldLabel("Chỉ số cũ"),
+            _buildTextField(_readingController, "0", keyboardType: TextInputType.number),
             const SizedBox(height: 20),
             
             _buildFieldLabel("Ngày"),
-            _buildTextField(TextEditingController(text: "20/05/2024"), "Chọn ngày", 
-              suffixIcon: Icons.calendar_month_outlined),
-            const SizedBox(height: 20),
-            
-            _buildFieldLabel("Thời gian"),
-            _buildTextField(TextEditingController(text: "09:00 AM"), "Chọn thời gian", 
-              suffixIcon: Icons.access_time_rounded),
+            _buildTextField(TextEditingController(text: "Chọn ngày"), "Chọn ngày", 
+              suffixIcon: Icons.calendar_month_outlined, readOnly: true),
             const SizedBox(height: 20),
 
             _buildFieldLabel("Trạng thái"),
@@ -86,43 +83,40 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
             ),
             const SizedBox(height: 50),
             
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.grey.withOpacity(0.3)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                    ),
-                    child: const Text(
-                      "Hủy", 
-                      style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (_nameController.text.isEmpty || _codeController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Vui lòng nhập tên và mã khách hàng"))
+                    );
+                    return;
+                  }
+
+                  final newCustomer = Customer(
+                    code: _codeController.text,
+                    name: _nameController.text,
+                    address: _addressController.text,
+                    oldReading: int.tryParse(_readingController.text) ?? 0,
+                    status: CollectionStatus.pending,
+                  );
+
+                  await CustomerService.addCustomer(newCustomer);
+                  if (mounted) Navigator.pop(context, true);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF5D9CEC),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  elevation: 0,
                 ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      await CustomerService.updateCustomer(widget.customer.id!, _nameController.text, _addressController.text);
-                      if (mounted) Navigator.pop(context, true);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFC6E51),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      "Lưu thay đổi", 
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ),
+                child: const Text(
+                  "Lưu công việc", 
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -140,10 +134,12 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, {int maxLines = 1, IconData? suffixIcon}) {
+  Widget _buildTextField(TextEditingController controller, String hint, {int maxLines = 1, IconData? suffixIcon, TextInputType keyboardType = TextInputType.text, bool readOnly = false}) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
       style: const TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
       decoration: InputDecoration(
         hintText: hint,

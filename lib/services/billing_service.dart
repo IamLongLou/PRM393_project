@@ -43,8 +43,8 @@ class BillingService {
   /// Lấy lịch sử hóa đơn (Bao gồm dữ liệu mẫu và dữ liệu vừa ghi)
   static List<Bill> getHistory(int customerId) {
     List<Bill> history = [
-      Bill(id: 1001, customerId: customerId, month: DateTime(2023, 11), oldReading: 100, newReading: 112, totalAmount: 85000, isPaid: true),
-      Bill(id: 1002, customerId: customerId, month: DateTime(2023, 12), oldReading: 112, newReading: 125, totalAmount: 98000, isPaid: true),
+      Bill(id: 1001, customerId: customerId, month: DateTime(2023, 11), oldReading: 100, newReading: 112, totalAmount: 85000, isSynced: true),
+      Bill(id: 1002, customerId: customerId, month: DateTime(2023, 12), oldReading: 112, newReading: 125, totalAmount: 98000, isSynced: true),
     ];
     
     // Gộp thêm các hóa đơn mới ghi offline

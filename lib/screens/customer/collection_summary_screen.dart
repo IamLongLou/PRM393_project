@@ -3,6 +3,7 @@ import '../../models/customer.dart';
 import '../../models/bill.dart';
 import '../../services/billing_service.dart';
 import '../../services/customer_service.dart';
+import '../../services/database_helper.dart';
 
 /// Màn hình Xác nhận và Tổng hợp Hóa đơn (Nghiệp vụ phức tạp & Chuyển dữ liệu)
 class CollectionSummaryScreen extends StatelessWidget {
@@ -147,20 +148,23 @@ class CollectionSummaryScreen extends StatelessWidget {
         const SizedBox(width: 15),
         Expanded(
           child: ElevatedButton(
-            onPressed: () {
-              // Lưu vào trạng thái ứng dụng
-              BillingService.addPendingBill(bill);
-              // Cập nhật trạng thái khách hàng trong service
-              CustomerService.updateStatus(customer.id, CollectionStatus.completed);
+            onPressed: () async {
+              // Lưu hóa đơn vào SQLite (Tính năng Offline)
+              final db = await DatabaseHelper.instance.database;
+              await db.insert('bills', bill.toMap());
+
+              // Cập nhật trạng thái khách hàng
+              await CustomerService.updateStatus(customer.id!, CollectionStatus.completed);
               
-              // Quay về màn hình danh sách và thông báo
-              Navigator.popUntil(context, ModalRoute.withName('/home'));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Thu tiền thành công! Hóa đơn đã được lưu vào lịch sử."),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              if (context.mounted) {
+                Navigator.popUntil(context, ModalRoute.withName('/home'));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Lưu hóa đơn offline thành công! Hãy đồng bộ khi có mạng."),
+                    backgroundColor: Color(0xFF48CFAD),
+                  ),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,

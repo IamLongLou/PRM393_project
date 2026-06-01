@@ -1,89 +1,81 @@
 import 'package:flutter/material.dart';
-import '../../models/customer.dart';
-import '../../services/customer_service.dart';
-import '../customer/customer_history_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/billing_provider.dart';
+import 'package:intl/intl.dart';
 
-/// Màn hình danh sách khách hàng để chọn xem lịch sử chi tiết
-class HistoryScreen extends StatefulWidget {
+class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
 
   @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
-}
-
-class _HistoryScreenState extends State<HistoryScreen> {
-  // Danh sách gốc từ service
-  List<Customer> customers = [];
-  // Danh sách hiển thị sau khi lọc
-  List<Customer> filtered = [];
-
-  @override
-  void initState() {
-    super.initState();
-    // Lấy dữ liệu khách hàng khi khởi tạo màn hình
-    customers = CustomerService.getCustomers();
-    filtered = customers;
-  }
-
-  /// Hàm tìm kiếm khách hàng theo tên hoặc mã
-  void _search(String keyword) {
-    setState(() {
-      filtered = customers.where((c) {
-        return c.name.toLowerCase().contains(keyword.toLowerCase()) ||
-               c.code.toLowerCase().contains(keyword.toLowerCase());
-      }).toList();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Chọn khách hàng xem lịch sử"),
+        title: const Text('Lịch sử thu tiền', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: Column(
-        children: [
-          // Thanh tìm kiếm
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              onChanged: _search,
-              decoration: const InputDecoration(
-                hintText: "Tìm tên hoặc mã khách hàng...",
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                ),
-              ),
-            ),
-          ),
-          // Danh sách khách hàng
-          Expanded(
-            child: ListView.builder(
-              itemCount: filtered.length,
-              itemBuilder: (context, index) {
-                final customer = filtered[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    child: Text(customer.name[0]), // Lấy chữ cái đầu của tên làm avatar
-                  ),
-                  title: Text(customer.name),
-                  subtitle: Text("Mã: ${customer.code}"),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    // Chuyển sang màn hình lịch sử chi tiết của khách hàng đã chọn
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CustomerHistoryScreen(customer: customer),
+      body: Consumer<BillingProvider>(
+        builder: (context, provider, child) {
+          return FutureBuilder(
+            future: provider.getAllBills(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+              
+              final bills = snapshot.data!;
+              if (bills.isEmpty) return const Center(child: Text('Chưa có lịch sử thu tiền nào.'));
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(10),
+                itemCount: bills.length,
+                itemBuilder: (context, index) {
+                  final bill = bills[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 5),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 25,
+                            backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                            child: const Icon(Icons.receipt_long, color: Colors.blue),
+                          ),
+                          const SizedBox(width: 15),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(bill.billCode, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                const SizedBox(height: 2),
+                                Text(bill.customerName ?? 'N/A', style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87)),
+                                Text('Mã KH: ${bill.customerCode ?? 'N/A'}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                Text(DateFormat('dd/MM/yyyy HH:mm').format(bill.date), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(currencyFormat.format(bill.totalAmount), 
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent, fontSize: 15)
+                              ),
+                              Text('${bill.consumption.toInt()} m³', 
+                                style: const TextStyle(fontSize: 12, color: Colors.grey)
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }

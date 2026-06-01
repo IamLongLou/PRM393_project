@@ -1,212 +1,241 @@
 import 'package:flutter/material.dart';
-import '../customer/customer_list_screen.dart';
-import '../profile/profile_screen.dart';
-import '../sync/sync_screen.dart';
-import '../../services/customer_service.dart';
+import 'package:intl/intl.dart';
+import '../../routes/app_routes.dart';
 
-/// Màn hình Dashboard dành cho Nhân viên Thu tiền nước
-/// Tích hợp đầy đủ nghiệp vụ: Thống kê, Ghi số, Thu tiền và Đồng bộ
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
-
-  @override
   Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      _buildOverviewTab(),
-      const CustomerListScreen(), // Danh sách đi thu
-      const Center(child: Text("Báo cáo doanh thu")),
-      const ProfileScreen(),
-    ];
+    final now = DateTime.now();
+    final DateFormat formatter = DateFormat('EEEE, d MMMM, yyyy', 'vi_VN');
+    final String formattedDate = formatter.format(now);
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: pages[_selectedIndex],
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildAppBar(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Chào buổi sáng, 👋', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    Text('Hôm nay: $formattedDate', style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                    const SizedBox(height: 20),
+                    _buildReadyBanner(),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        _buildStatCard('42', 'CHƯA GHI', Colors.orange),
+                        const SizedBox(width: 15),
+                        _buildStatCard('158', 'HOÀN TẤT', Colors.green),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('CHỨC NĂNG CHÍNH', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text('Xem tất cả', style: TextStyle(color: Colors.blue, fontSize: 12)),
+                      ],
+                    ),
+                    const SizedBox(height: 15),
+                    _buildFunctionGrid(context),
+                    const SizedBox(height: 20),
+                    _buildNoticeBanner(),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blue[700],
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), label: "Tổng quan"),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: "Đi thu"),
-          BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: "Báo cáo"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Cá nhân"),
-        ],
-      ),
+      bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
-  /// Tab Tổng quan: Mô tả chi tiết tiến độ và các phím tắt nghiệp vụ
-  Widget _buildOverviewTab() {
-    int total = CustomerService.getCustomers().length;
-    int completed = CustomerService.getCollectionHistory().length;
-    int pending = CustomerService.getToCollectList().length;
-
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildAppBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
         children: [
-          _buildHeader(),
-          
-          // Mô tả công việc (Description)
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: Text(
-              "NHIỆM VỤ HÔM NAY",
-              style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.blueGrey),
-            ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.water_drop, color: Colors.white, size: 20),
           ),
-          
-          _buildStatsCard(total, completed, pending),
-          
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Text(
-              "NGHIỆP VỤ CHÍNH",
-              style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.blueGrey),
-            ),
-          ),
-          
-          _buildActionGrid(),
-          
-          // Hướng dẫn sử dụng nhanh
-          _buildQuickGuide(),
-          
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 30),
-      decoration: BoxDecoration(
-        color: Colors.blue[700],
-        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Nhân viên quản lý thu", style: TextStyle(color: Colors.white70)),
-          SizedBox(height: 4),
-          Text("NGUYỄN VĂN A", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsCard(int total, int completed, int pending) {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15)],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          const SizedBox(width: 10),
+          const Text('Water Billing', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Spacer(),
+          const Stack(
             children: [
-              _statItem(total.toString(), "Tổng hộ"),
-              _statItem(completed.toString(), "Đã thu", color: Colors.green),
-              _statItem(pending.toString(), "Chưa thu", color: Colors.orange),
+              Icon(Icons.notifications_none, size: 28),
+              Positioned(right: 0, top: 0, child: CircleAvatar(radius: 5, backgroundColor: Colors.red)),
             ],
           ),
-          const SizedBox(height: 20),
-          LinearProgressIndicator(
-            value: total > 0 ? completed / total : 0,
-            backgroundColor: Colors.grey[200],
-            color: Colors.green,
-            minHeight: 10,
-            borderRadius: BorderRadius.circular(5),
+          const SizedBox(width: 15),
+          const CircleAvatar(
+            radius: 18,
+            backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=a'),
           ),
-          const SizedBox(height: 10),
-          Text("${((completed/total)*100).toStringAsFixed(0)}% Hoàn thành", style: const TextStyle(fontSize: 12, color: Colors.grey)),
         ],
       ),
     );
   }
 
-  Widget _buildActionGrid() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        mainAxisSpacing: 15,
-        crossAxisSpacing: 15,
-        childAspectRatio: 1.4,
-        children: [
-          _actionCard(Icons.people_alt_outlined, "Danh sách đi thu", Colors.blue, () => setState(() => _selectedIndex = 1)),
-          _actionCard(Icons.cloud_sync, "Đồng bộ (Offline)", Colors.orange, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SyncScreen()))),
-          _actionCard(Icons.history_edu, "Lịch sử thu tiền", Colors.green, () {
-            setState(() => _selectedIndex = 2);
-          }),
-          _actionCard(Icons.warning_amber_rounded, "Báo cáo sự cố", Colors.red, () {}),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickGuide() {
+  Widget _buildReadyBanner() {
+    final String lastSync = DateFormat('HH:mm a').format(DateTime.now().subtract(const Duration(minutes: 45)));
     return Container(
-      margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(15)),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(15)),
+      child: Row(
         children: [
-          Text("Hướng dẫn nhanh:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blue)),
-          SizedBox(height: 8),
-          Text("1. Chọn 'Đi thu' để bắt đầu ghi số nước.", style: TextStyle(fontSize: 13)),
-          Text("2. Nhập số nước -> Xem bảng tính lũy kế -> Thu tiền.", style: TextStyle(fontSize: 13)),
-          Text("3. Dữ liệu sẽ lưu Offline và cần Đồng bộ sau ca làm.", style: TextStyle(fontSize: 13)),
+          const Icon(Icons.check_circle, color: Colors.green),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Dữ liệu đã sẵn sàng', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text('Đồng bộ lần cuối: $lastSync', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.green)),
+            child: const Text('Ổn định', style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
   }
 
-  Widget _statItem(String val, String label, {Color color = Colors.black}) {
-    return Column(
+  Widget _buildStatCard(String value, String label, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)]),
+        child: Row(
+          children: [
+            Icon(Icons.access_time, color: color, size: 24),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildFunctionGrid(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 15,
+      crossAxisSpacing: 15,
+      childAspectRatio: 1.2,
       children: [
-        Text(val, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: color)),
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        _funcCard(context, 'Khách hàng', 'Danh sách hộ dân & ghi chỉ số nước', Icons.people_outline, Colors.blue, AppRoutes.customerList, hasBadge: true),
+        _funcCard(context, 'Đồng bộ', 'Tải lên kết quả & cập nhật dữ liệu', Icons.sync, Colors.green, AppRoutes.sync),
+        _funcCard(context, 'Thống kê', 'Báo cáo sản lượng & hiệu suất thu', Icons.bar_chart, Colors.purple, AppRoutes.statistics),
+        _funcCard(context, 'Lịch sử', 'Nhật ký hoạt động & biên lai đã xuất', Icons.history, Colors.grey, AppRoutes.history),
       ],
     );
   }
 
-  Widget _actionCard(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _funcCard(BuildContext context, String title, String desc, IconData icon, Color color, String route, {bool hasBadge = false}) {
     return InkWell(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey[200]!)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 35),
-            const SizedBox(height: 10),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-          ],
-        ),
+      onTap: () => Navigator.pushNamed(context, route),
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const SizedBox(height: 12),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 4),
+                Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 10), maxLines: 2),
+              ],
+            ),
+          ),
+          if (hasBadge)
+            Positioned(
+              right: 10, top: 10,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                child: const Text('12', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+              ),
+            ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildNoticeBanner() {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: const Color(0xFFE3F2FD), borderRadius: BorderRadius.circular(15)),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, color: Colors.blue),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Thông báo từ hệ thống', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 4),
+                Text('Khu vực Phường 5 đang có lịch bảo trì đường ống vào ngày mai. Vui lòng nhắc nhở các hộ dân tích trữ nước.', 
+                  style: TextStyle(color: Colors.black54, fontSize: 12)
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNav(BuildContext context) {
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      currentIndex: 0,
+      selectedItemColor: Colors.blue,
+      unselectedItemColor: Colors.grey,
+      selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      onTap: (index) {
+        if (index == 1) Navigator.pushNamed(context, AppRoutes.customerList);
+        if (index == 2) Navigator.pushNamed(context, AppRoutes.history);
+        if (index == 3) Navigator.pushNamed(context, AppRoutes.settings);
+      },
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
+        BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Khách hàng'),
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Lịch sử'),
+        BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Cài đặt'),
+      ],
     );
   }
 }
