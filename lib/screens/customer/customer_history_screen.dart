@@ -68,6 +68,19 @@ class CustomerHistoryScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
+          // Tên khách hàng
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Khách hàng", style: TextStyle(fontSize: 16)),
+                Text(customer.name, 
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF007BC3))),
+              ],
+            ),
+          ),
+          const Divider(height: 1, thickness: 1),
           // Header hóa đơn
           Padding(
             padding: const EdgeInsets.all(12.0),
