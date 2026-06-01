@@ -46,11 +46,39 @@ class CustomerCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            Text("Mã KH: ${customer.code}", style: const TextStyle(color: Colors.grey, fontSize: 13)),
+            Row(
+              children: [
+                const Icon(Icons.qr_code, size: 14, color: Colors.blue),
+                const SizedBox(width: 4),
+                Text("Mã: ${customer.code}", 
+                  style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 13)),
+              ],
+            ),
             Text(customer.address, style: const TextStyle(color: Colors.grey, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: customer.status == CollectionStatus.completed ? Colors.green[50] : Colors.orange[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                customer.status == CollectionStatus.completed ? "ĐÃ THU" : "CHỜ GHI",
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: customer.status == CollectionStatus.completed ? Colors.green : Colors.orange,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey, size: 16),
+          ],
+        ),
       ),
     );
   }

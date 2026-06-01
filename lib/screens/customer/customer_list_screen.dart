@@ -82,8 +82,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
             child: ListView.builder(
               itemCount: filtered.length,
               itemBuilder: (context, index) {
+                final customer = filtered[index];
                 return CustomerCard(
-                  customer: filtered[index],
+                  customer: customer,
                 );
               },
             ),

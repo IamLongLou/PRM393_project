@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/customer.dart';
 import '../../models/bill.dart';
 import '../../services/billing_service.dart';
+import 'meter_reading_screen.dart';
 
 /// Màn hình Chi tiết hóa đơn tiền nước - Bắt chước mẫu Hóa đơn điện tử (Ảnh 2)
 class CustomerHistoryScreen extends StatelessWidget {
@@ -23,6 +24,17 @@ class CustomerHistoryScreen extends StatelessWidget {
         title: const Text("Chi tiết hóa đơn tiền nước", 
           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
         iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MeterReadingScreen(customer: customer)),
+          );
+        },
+        label: const Text("Ghi chỉ số mới"),
+        icon: const Icon(Icons.edit_note),
+        backgroundColor: Colors.blue[700],
       ),
       body: SingleChildScrollView(
         child: Column(
