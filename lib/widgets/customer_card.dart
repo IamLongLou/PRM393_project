@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/customer.dart';
+import '../screens/customer/customer_history_screen.dart';
 
 class CustomerCard extends StatelessWidget {
 
@@ -16,6 +17,14 @@ class CustomerCard extends StatelessWidget {
 
     return Card(
       child: ListTile(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CustomerHistoryScreen(customer: customer),
+            ),
+          );
+        },
         leading: CircleAvatar(
           child: Text(customer.id.toString()),
         ),
