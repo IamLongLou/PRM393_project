@@ -200,13 +200,13 @@ class HomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.info_outline, color: Colors.blue),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Thông báo từ hệ thống', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text('Khu vực Phường 5 đang có lịch bảo trì đường ống vào ngày mai. Vui lòng nhắc nhở các hộ dân tích trữ nước.', 
                   style: TextStyle(color: Colors.black54, fontSize: 12)
                 ),
