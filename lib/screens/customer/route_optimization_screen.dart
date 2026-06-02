@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/customer.dart';
 
@@ -13,15 +14,9 @@ class RouteOptimizationScreen extends StatefulWidget {
 }
 
 class _RouteOptimizationScreenState extends State<RouteOptimizationScreen> {
-  late GoogleMapController mapController;
-
   // Tọa độ giả lập cho demo (Gần Hồ Hoàn Kiếm, Hà Nội)
-  final LatLng _center = const LatLng(21.0285, 105.8542);
+  final LatLng _currentPos = const LatLng(21.0285, 105.8542);
   final LatLng _destination = const LatLng(21.0245, 105.8412);
-
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
-  }
 
   Future<void> _startNavigation() async {
     final String googleMapsUrl = "google.navigation:q=${_destination.latitude},${_destination.longitude}";
@@ -78,29 +73,45 @@ class _RouteOptimizationScreenState extends State<RouteOptimizationScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // 1. Real Google Map
+          // 1. OpenStreetMap (Free, No API Key needed)
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.6,
-            child: GoogleMap(
-              onMapCreated: _onMapCreated,
-              initialCameraPosition: CameraPosition(
-                target: _center,
-                zoom: 14.0,
+            child: FlutterMap(
+              options: MapOptions(
+                initialCenter: _currentPos,
+                initialZoom: 14.5,
               ),
-              markers: {
-                Marker(
-                  markerId: const MarkerId('current_pos'),
-                  position: _center,
-                  infoWindow: const InfoWindow(title: 'Vị trí của bạn'),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.example.app',
                 ),
-                Marker(
-                  markerId: const MarkerId('dest_pos'),
-                  position: _destination,
-                  infoWindow: InfoWindow(title: widget.customer.name),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: _currentPos,
+                      width: 40,
+                      height: 40,
+                      child: const Icon(Icons.location_on, color: Colors.blue, size: 40),
+                    ),
+                    Marker(
+                      point: _destination,
+                      width: 40,
+                      height: 40,
+                      child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+                    ),
+                  ],
                 ),
-              },
-              // Thêm polyline giả lập nếu muốn vẽ đường đi
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: [_currentPos, _destination],
+                      color: Colors.blue.withValues(alpha: 0.7),
+                      strokeWidth: 5,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
 
