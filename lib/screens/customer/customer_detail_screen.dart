@@ -5,6 +5,7 @@ import '../../models/customer.dart';
 import '../../routes/app_routes.dart';
 import 'customer_history_screen.dart';
 import 'meter_reading_screen.dart';
+import 'route_optimization_screen.dart';
 
 class CustomerDetailScreen extends StatelessWidget {
   final Customer customer;
@@ -274,10 +275,35 @@ class CustomerDetailScreen extends StatelessWidget {
   Widget _buildActionButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: ElevatedButton.icon(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MeterReadingScreen(customer: customer))),
-        icon: const Icon(Icons.edit_note, size: 24),
-        label: const Text('Ghi chỉ số mới'),
+      child: Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MeterReadingScreen(customer: customer))),
+              icon: const Icon(Icons.edit_note, size: 24),
+              label: const Text('Ghi chỉ số mới'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (_) => RouteOptimizationScreen(customer: customer))
+              ),
+              icon: const Icon(Icons.directions_outlined, size: 22),
+              label: const Text('Chỉ đường'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                side: const BorderSide(color: Color(0xFF2196F3)),
+                foregroundColor: const Color(0xFF2196F3),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
