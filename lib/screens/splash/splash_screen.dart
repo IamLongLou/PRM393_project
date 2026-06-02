@@ -20,10 +20,10 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   void initState() {
     super.initState();
     
-    // Controller cho thanh tiến trình 15s
+    // Controller cho thanh tiến trình hiện giây
     _progressController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 15),
+      duration: const Duration(seconds: 60),
     );
 
     _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_progressController)
@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     super.dispose();
   }
 
-  _checkAuth() async {
+  Future<void> _checkAuth() async {
     if (!mounted) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
@@ -209,7 +209,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                   ),
                 ),
                 const Text(
-                  'Phiên bản 2.4.0 - © 2024 Water Billing Corp',
+                  'Phiên bản 3.1.1 - © 2024 Long Hoa Cai Corp',
                   style: TextStyle(fontSize: 10, color: Colors.white70),
                 ),
                 const SizedBox(height: 30),
