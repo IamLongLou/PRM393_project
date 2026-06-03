@@ -11,18 +11,20 @@ class ProfileScreen extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.user;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : const Color(0xFF1E293B)),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Color(0xFF1E293B)),
+            icon: Icon(Icons.settings_outlined, color: isDark ? Colors.white : const Color(0xFF1E293B)),
             onPressed: () => Navigator.pushNamed(context, AppRoutes.settings),
           ),
         ],
@@ -50,7 +52,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 15),
             Text(
               user?.fullName ?? "Nguyễn Văn A",
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
             ),
             const SizedBox(height: 4),
             Text(
@@ -61,16 +63,19 @@ class ProfileScreen extends StatelessWidget {
 
             // Menu Items List
             _buildMenuItem(
+              context,
               icon: Icons.person_outline, 
               title: "Thông tin cá nhân",
               onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
             ),
             _buildMenuItem(
+              context,
               icon: Icons.lock_outline, 
               title: "Đổi mật khẩu",
               onTap: () => Navigator.pushNamed(context, AppRoutes.changePassword),
             ),
             _buildMenuItem(
+              context,
               icon: Icons.language_outlined, 
               title: "Ngôn ngữ", 
               trailingText: "Tiếng Việt",
@@ -86,17 +91,19 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem({
+  Widget _buildMenuItem(
+    BuildContext context, {
     required IconData icon, 
     required String title, 
     String? trailingText, 
     required VoidCallback onTap
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
@@ -109,12 +116,12 @@ class ProfileScreen extends StatelessWidget {
         child: ListTile(
           onTap: onTap,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          leading: Icon(icon, color: const Color(0xFF64748B), size: 22),
+          leading: Icon(icon, color: isDark ? Colors.white70 : const Color(0xFF64748B), size: 22),
           title: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w500, 
-              color: Color(0xFF1E293B),
+              color: isDark ? Colors.white : const Color(0xFF1E293B),
               fontSize: 15,
             ),
           ),
@@ -124,10 +131,10 @@ class ProfileScreen extends StatelessWidget {
               if (trailingText != null)
                 Text(
                   trailingText,
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 13),
                 ),
               const SizedBox(width: 5),
-              const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
+              Icon(Icons.arrow_forward_ios_rounded, size: 14, color: isDark ? Colors.white38 : Colors.grey),
             ],
           ),
         ),

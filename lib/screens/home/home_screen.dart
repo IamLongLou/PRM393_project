@@ -67,7 +67,7 @@ class HomeScreen extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardTheme.color,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
           ),
@@ -96,7 +96,7 @@ class HomeScreen extends StatelessWidget {
     final user = Provider.of<AuthProvider>(context).user;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -275,7 +275,7 @@ class HomeScreen extends StatelessWidget {
         onTap: () => Navigator.pushNamed(context, AppRoutes.customerList, arguments: {'tabIndex': tabIndex}),
         child: Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)]),
+          decoration: BoxDecoration(color: Theme.of(context).cardTheme.color, borderRadius: BorderRadius.circular(15), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)]),
           child: Row(
             children: [
               Icon(Icons.analytics_outlined, color: color, size: 24),
@@ -317,7 +317,7 @@ class HomeScreen extends StatelessWidget {
           ];
         } else {
           cards = [
-            _funcCard(context, 'Hóa đơn', 'Xem hóa đơn tiền nước tháng này', Icons.receipt_long_outlined, Colors.blue, AppRoutes.history),
+            _funcCard(context, 'Khách hàng', 'Xem hóa đơn tiền nước tháng này', Icons.people_outline, Colors.blue, AppRoutes.history),
             _funcCard(context, 'Thanh toán', 'Thanh toán trực tuyến an toàn', Icons.account_balance_wallet_outlined, Colors.green, AppRoutes.home),
             _funcCard(context, 'Lịch sử', 'Lịch sử sử dụng nước & thanh toán', Icons.history, Colors.purple, AppRoutes.history),
             _funcCard(context, 'Hỗ trợ', 'Gửi yêu cầu hỗ trợ kỹ thuật', Icons.support_agent_outlined, Colors.orange, AppRoutes.settings),
@@ -338,38 +338,42 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _funcCard(BuildContext context, String title, String desc, IconData icon, Color color, String route, {bool hasBadge = false, String badgeValue = '0'}) {
-    return InkWell(
-      onTap: () => Navigator.pushNamed(context, route),
-      child: Stack(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                  child: Icon(icon, color: color, size: 24),
-                ),
-                const SizedBox(height: 12),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                const SizedBox(height: 4),
-                Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 10), maxLines: 2),
-              ],
-            ),
-          ),
-          if (hasBadge)
-            Positioned(
-              right: 10, top: 10,
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                child: Text(badgeValue, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+    return Material(
+      color: Theme.of(context).cardTheme.color,
+      borderRadius: BorderRadius.circular(15),
+      child: InkWell(
+        onTap: () => Navigator.pushNamed(context, route),
+        borderRadius: BorderRadius.circular(15),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                    child: Icon(icon, color: color, size: 24),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 4),
+                  Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 10), maxLines: 2),
+                ],
               ),
             ),
-        ],
+            if (hasBadge)
+              Positioned(
+                right: 10, top: 10,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  child: Text(badgeValue, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -420,14 +424,11 @@ class HomeScreen extends StatelessWidget {
         if (index == 2) Navigator.pushReplacementNamed(context, AppRoutes.history);
         if (index == 3) Navigator.pushReplacementNamed(context, AppRoutes.settings);
       },
-      items: [
-        const BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
-        BottomNavigationBarItem(
-          icon: Icon(role == 'user' ? Icons.receipt_long_outlined : Icons.people_outline), 
-          label: role == 'user' ? 'Hóa đơn' : 'Khách hàng'
-        ),
-        const BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Lịch sử'),
-        const BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Cài đặt'),
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
+        BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Khách hàng'),
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Lịch sử'),
+        BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Cài đặt'),
       ],
     );
   }

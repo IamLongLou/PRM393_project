@@ -74,24 +74,25 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   @override
   Widget build(BuildContext context) {
     final format = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Biên lai điện tử', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
+          icon: Icon(Icons.close, color: isDark ? Colors.white : Colors.black),
           onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_outlined, color: Colors.black),
+            icon: Icon(Icons.share_outlined, color: isDark ? Colors.white : Colors.black),
             onPressed: _shareReceipt,
           ),
           IconButton(
-            icon: const Icon(Icons.print_outlined, color: Colors.black),
+            icon: Icon(Icons.print_outlined, color: isDark ? Colors.white : Colors.black),
             onPressed: _printReceipt,
           ),
         ],
@@ -101,17 +102,17 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            const Icon(Icons.check_circle, color: Colors.black, size: 50),
+            Icon(Icons.check_circle, color: isDark ? Colors.white : Colors.black, size: 50),
             const SizedBox(height: 15),
             const Text('Thanh toán thành công!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
             const Text('Giao dịch của bạn đã được ghi nhận', style: TextStyle(color: Colors.grey, fontSize: 13)),
             const SizedBox(height: 5),
-            const Text('Đã hoàn thành', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
+            Text('Đã hoàn thành', style: TextStyle(color: isDark ? Colors.white70 : Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
             const SizedBox(height: 30),
             Screenshot(
               controller: _screenshotController,
-              child: _buildMainReceipt(format),
+              child: _buildMainReceipt(format, isDark),
             ),
             const SizedBox(height: 30),
             ElevatedButton(
@@ -139,10 +140,10 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     );
   }
 
-  Widget _buildMainReceipt(NumberFormat format) {
+  Widget _buildMainReceipt(NumberFormat format, bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -165,12 +166,12 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
             padding: const EdgeInsets.all(25),
             child: Column(
               children: [
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.water_drop, color: Colors.black, size: 24),
-                    SizedBox(width: 8),
-                    Text('FieldFlow', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                    Icon(Icons.water_drop, color: isDark ? Colors.white : Colors.black, size: 24),
+                    const SizedBox(width: 8),
+                    const Text('FieldFlow', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -179,25 +180,25 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                 Text(widget.bill.billCode, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const Padding(padding: EdgeInsets.symmetric(vertical: 25), child: Divider(height: 1, color: Colors.grey, thickness: 0.1)),
                 
-                _infoItem(Icons.person_outline, 'Khách hàng', widget.customer.name, 'ID: ${widget.customer.code}'),
+                _infoItem(Icons.person_outline, 'Khách hàng', widget.customer.name, 'ID: ${widget.customer.code}', isDark),
                 const SizedBox(height: 20),
-                _infoItem(Icons.location_on_outlined, 'Địa chỉ', widget.customer.address, null),
+                _infoItem(Icons.location_on_outlined, 'Địa chỉ', widget.customer.address, null, isDark),
                 const SizedBox(height: 20),
-                _infoItem(Icons.calendar_today_outlined, 'Thời gian', DateFormat('dd/MM/yyyy HH:mm').format(widget.bill.date), null),
+                _infoItem(Icons.calendar_today_outlined, 'Thời gian', DateFormat('dd/MM/yyyy HH:mm').format(widget.bill.date), null, isDark),
                 
                 const Padding(padding: EdgeInsets.symmetric(vertical: 25), child: Divider(height: 1, color: Colors.grey, thickness: 0.1)),
                 
-                _billDetail('Chỉ số cũ', '${widget.bill.oldReading} m³'),
-                _billDetail('Chỉ số mới', '${widget.bill.newReading} m³'),
-                _billDetail('Tiêu thụ', '${widget.bill.consumption.toInt()} m³', isBlue: true),
-                _billDetail('Đơn giá', '12.000đ'),
-                _billDetail('VAT (10%)', format.format(widget.bill.vat)),
+                _billDetail('Chỉ số cũ', '${widget.bill.oldReading} m³', isDark),
+                _billDetail('Chỉ số mới', '${widget.bill.newReading} m³', isDark),
+                _billDetail('Tiêu thụ', '${widget.bill.consumption.toInt()} m³', isDark, isBlue: true),
+                _billDetail('Đơn giá', '12.000đ', isDark),
+                _billDetail('VAT (10%)', format.format(widget.bill.vat), isDark),
                 
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0F7FF),
+                    color: isDark ? Colors.blue.withOpacity(0.1) : const Color(0xFFF0F7FF),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -236,12 +237,12 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     );
   }
 
-  Widget _infoItem(IconData icon, String label, String value, String? subValue) => Row(
+  Widget _infoItem(IconData icon, String label, String value, String? subValue, bool isDark) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Container(
         padding: const EdgeInsets.all(8),
-        decoration: const BoxDecoration(color: Color(0xFFF0F7FF), shape: BoxShape.circle),
+        decoration: BoxDecoration(color: isDark ? Colors.blue.withOpacity(0.1) : const Color(0xFFF0F7FF), shape: BoxShape.circle),
         child: Icon(icon, size: 16, color: const Color(0xFF2196F3)),
       ),
       const SizedBox(width: 15),
@@ -251,7 +252,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
           children: [
             Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
-            Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
             if (subValue != null) Text(subValue, style: const TextStyle(color: Colors.grey, fontSize: 11)),
           ],
         ),
@@ -259,13 +260,13 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     ],
   );
 
-  Widget _billDetail(String label, String value, {bool isBlue = false}) => Padding(
+  Widget _billDetail(String label, String value, bool isDark, {bool isBlue = false}) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 6),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-        Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isBlue ? const Color(0xFF2196F3) : Colors.black87)),
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isBlue ? const Color(0xFF2196F3) : (isDark ? Colors.white : Colors.black87))),
       ],
     ),
   );

@@ -52,7 +52,7 @@ class CustomerCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
@@ -111,7 +111,11 @@ class CustomerCard extends StatelessWidget {
           const SizedBox(height: 15),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.withOpacity(0.1))),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : Colors.grey[50], 
+              borderRadius: BorderRadius.circular(10), 
+              border: Border.all(color: Colors.grey.withOpacity(0.1))
+            ),
             child: Row(
               children: [
                 const Icon(Icons.speed, size: 18, color: Colors.grey),
@@ -166,7 +170,7 @@ class CustomerCard extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardTheme.color,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
           ),
@@ -267,8 +271,8 @@ class CustomerCard extends StatelessWidget {
                   icon: const Icon(Icons.print_outlined, size: 16),
                   label: const Text('Xem / In hóa đơn', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                   style: TextButton.styleFrom(
-                    backgroundColor: Colors.grey[100],
-                    foregroundColor: Colors.black87,
+                    backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.1) : Colors.grey[100],
+                    foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),

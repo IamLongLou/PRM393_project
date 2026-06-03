@@ -51,6 +51,8 @@ class _SyncScreenState extends State<SyncScreen> {
   @override
   Widget build(BuildContext context) {
     final billingProvider = context.watch<BillingProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return FutureBuilder<List<Bill>>(
       future: billingProvider.getAllBills(),
       builder: (context, snapshot) {
@@ -58,12 +60,12 @@ class _SyncScreenState extends State<SyncScreen> {
         final unsyncedBills = allBills.where((b) => !b.isSynced).toList();
 
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
             title: const Text('Trung tâm Đồng bộ', style: TextStyle(fontWeight: FontWeight.bold)),
             elevation: 0,
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
+            backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+            foregroundColor: isDark ? Colors.white : Colors.black,
           ),
           body: Column(
             children: [
@@ -152,7 +154,7 @@ class _SyncScreenState extends State<SyncScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(15),
         border: Border.all(color: Colors.cyan.withValues(alpha: 0.1)),
       ),
@@ -162,7 +164,7 @@ class _SyncScreenState extends State<SyncScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('MÃ PHIẾU: ${bill.billCode}', style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+              Text('MÃ PHIẾU: ${bill.billCode}', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white60 : Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(color: Colors.cyan.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(10)),
@@ -183,14 +185,14 @@ class _SyncScreenState extends State<SyncScreen> {
             children: [
               const Icon(Icons.access_time, size: 14, color: Colors.grey),
               const SizedBox(width: 8),
-              Text(DateFormat('dd/MM/yyyy, HH:mm').format(bill.date), style: const TextStyle(color: Colors.grey, fontSize: 11)),
+              Text(DateFormat('dd/MM/yyyy, HH:mm').format(bill.date), style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white60 : Colors.grey, fontSize: 11)),
             ],
           ),
           const Divider(height: 30, thickness: 0.1),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Tổng thanh toán:', style: TextStyle(color: Colors.black54, fontSize: 12)),
+              Text('Tổng thanh toán:', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54, fontSize: 12)),
               Text(currencyFormat.format(bill.totalAmount), style: const TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold, fontSize: 16)),
             ],
           ),
@@ -263,17 +265,20 @@ class _SyncScreenState extends State<SyncScreen> {
   Widget _buildBottomNav(BuildContext context) {
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
-      currentIndex: 2,
+      currentIndex: 3, // Giả định thuộc phần cài đặt/hệ thống
       selectedItemColor: Colors.blue,
       unselectedItemColor: Colors.grey,
       onTap: (index) {
         if (index == 0) Navigator.pushReplacementNamed(context, AppRoutes.home);
-        if (index == 1) Navigator.pushReplacementNamed(context, AppRoutes.statistics);
+        if (index == 1) Navigator.pushReplacementNamed(context, AppRoutes.customerList);
+        if (index == 2) Navigator.pushReplacementNamed(context, AppRoutes.history);
+        if (index == 3) Navigator.pushReplacementNamed(context, AppRoutes.settings);
       },
       items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Payment'),
-        BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Stats'),
-        BottomNavigationBarItem(icon: Icon(Icons.sync), label: 'Sync'),
+        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
+        BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Khách hàng'),
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Lịch sử'),
+        BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Cài đặt'),
       ],
     );
   }

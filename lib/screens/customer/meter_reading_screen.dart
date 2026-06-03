@@ -31,8 +31,11 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
     final String monthYear = DateFormat('MM/yyyy').format(DateTime.now());
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(title: const Text('Ghi chỉ số')),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: const Text('Ghi chỉ số'),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -98,10 +101,15 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
   }
 
   Widget _buildUserHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withValues(alpha: 0.1))),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color, 
+        borderRadius: BorderRadius.circular(15), 
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1))
+      ),
       child: Row(
         children: [
           CircleAvatar(radius: 25, backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=${widget.customer.id}')),
@@ -110,8 +118,8 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.customer.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const Text('# PE120005678', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                Text(widget.customer.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : Colors.black)),
+                Text('# PE120005678', style: TextStyle(color: isDark ? Colors.white60 : Colors.grey, fontSize: 11)),
               ],
             ),
           ),
@@ -122,6 +130,7 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
   }
 
   Widget _readingInputBox(String label, String value, {required bool isOld}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +141,9 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
             height: 80,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isOld ? Colors.grey[100] : Colors.white,
+              color: isOld 
+                  ? (isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100]) 
+                  : (isDark ? Colors.white.withOpacity(0.1) : Colors.white),
               borderRadius: BorderRadius.circular(15),
               border: Border.all(color: isOld ? Colors.transparent : Colors.blue, width: 2),
             ),
@@ -141,9 +152,9 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                Text(value, style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: isOld ? Colors.grey[600] : Colors.black87)),
+                Text(value, style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: isOld ? (isDark ? Colors.white60 : Colors.grey[600]) : (isDark ? Colors.white : Colors.black87))),
                 const SizedBox(width: 4),
-                const Text('m³', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Text('m³', style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : Colors.grey)),
               ],
             ),
           ),
@@ -171,6 +182,7 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
   );
 
   Widget _keyButton(String k) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (k == ".") return const Center(child: CircleAvatar(radius: 3, backgroundColor: Colors.grey));
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -179,10 +191,14 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
         child: Container(
           height: 55,
           alignment: Alignment.center,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5)]),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.1) : Colors.white, 
+            borderRadius: BorderRadius.circular(12), 
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5)]
+          ),
           child: k == "del" 
               ? const Icon(Icons.backspace_outlined, color: Colors.redAccent, size: 20)
-              : Text(k, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              : Text(k, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
         ),
       ),
     );

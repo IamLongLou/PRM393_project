@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/customer.dart';
 import '../../providers/billing_provider.dart';
+import '../../routes/app_routes.dart';
 import 'meter_reading_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -226,13 +227,20 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
   Widget _buildBottomNav() {
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
-      currentIndex: 0,
+      currentIndex: 2, // Thuộc phần Lịch sử
       selectedItemColor: Colors.blue,
       unselectedItemColor: Colors.grey,
+      onTap: (index) {
+        if (index == 0) Navigator.pushReplacementNamed(context, AppRoutes.home);
+        if (index == 1) Navigator.pushReplacementNamed(context, AppRoutes.customerList);
+        if (index == 2) Navigator.pushReplacementNamed(context, AppRoutes.history);
+        if (index == 3) Navigator.pushReplacementNamed(context, AppRoutes.settings);
+      },
       items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
         BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Khách hàng'),
-        BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: 'Lịch trình'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Cá nhân'),
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Lịch sử'),
+        BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Cài đặt'),
       ],
     );
   }

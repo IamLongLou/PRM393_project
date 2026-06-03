@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../routes/app_routes.dart';
+import '../../providers/theme_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -138,10 +140,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         centerTitle: true,
         title: Row(
@@ -175,6 +180,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 10),
             _buildSectionTitle('DEVICE & DATA'),
             _buildSettingsGroup([
+              _buildSettingItem(
+                icon: Icons.brightness_4_outlined,
+                title: 'Dark Mode',
+                trailing: Switch(
+                  value: isDark,
+                  onChanged: (v) => themeProvider.toggleTheme(v),
+                  activeThumbColor: Colors.blue,
+                ),
+              ),
+              const Divider(height: 1, indent: 60),
               _buildSettingItem(
                 icon: Icons.print_outlined,
                 title: 'Thermal Printer',
@@ -281,7 +296,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -371,7 +386,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
       ),

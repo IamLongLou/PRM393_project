@@ -46,7 +46,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -76,7 +76,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> with SingleTick
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black87),
+            icon: Icon(Icons.arrow_back, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
           Container(
@@ -108,7 +108,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> with SingleTick
               decoration: InputDecoration(
                 hintText: 'Tìm tên hoặc mã KH...',
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                fillColor: Colors.white,
+                fillColor: Theme.of(context).cardTheme.color,
                 filled: true,
                 contentPadding: EdgeInsets.zero,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -118,7 +118,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> with SingleTick
           const SizedBox(width: 10),
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: Theme.of(context).cardTheme.color, borderRadius: BorderRadius.circular(12)),
             child: const Icon(Icons.tune, color: Colors.grey, size: 20),
           ),
         ],
@@ -130,7 +130,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> with SingleTick
     return Container(
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: Theme.of(context).cardTheme.color, borderRadius: BorderRadius.circular(12)),
       child: TabBar(
         controller: _tabController,
         tabs: const [Tab(text: 'Chưa thu'), Tab(text: 'Đã thu')],
@@ -182,10 +182,13 @@ class _CustomerListScreenState extends State<CustomerListScreen> with SingleTick
     return Container(
       margin: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
       padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.03), borderRadius: BorderRadius.circular(15)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : Colors.black.withValues(alpha: 0.03), 
+        borderRadius: BorderRadius.circular(15)
+      ),
       child: Row(
         children: [
-          const Icon(Icons.trending_up, color: Colors.black),
+          Icon(Icons.trending_up, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
           const SizedBox(width: 12),
           const Expanded(child: Text('TỔNG THU TRONG NGÀY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
           Text(FormatterUtils.formatCurrency(total), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),

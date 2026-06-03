@@ -6,6 +6,7 @@ import 'providers/auth_provider.dart';
 import 'providers/customer_provider.dart';
 import 'providers/billing_provider.dart';
 import 'providers/sync_provider.dart';
+import 'providers/theme_provider.dart';
 import 'core/theme/app_theme.dart';
 
 void main() async {
@@ -18,6 +19,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => CustomerProvider()),
         ChangeNotifierProvider(create: (_) => BillingProvider()),
         ChangeNotifierProvider(create: (_) => SyncProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: const MyApp(),
     ),
@@ -29,10 +31,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Water Billing',
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeProvider.themeMode,
       initialRoute: AppRoutes.splash,
       routes: AppRoutes.routes,
     );

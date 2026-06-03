@@ -32,11 +32,12 @@ class CustomerDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Chi tiết KH'),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -50,7 +51,7 @@ class CustomerDetailScreen extends StatelessWidget {
             const SizedBox(height: 25),
             _buildMainReadingCard(),
             const SizedBox(height: 20),
-            _buildLocationSection(),
+            _buildLocationSection(context),
             const SizedBox(height: 20),
             _buildHistoryAccess(context),
             const SizedBox(height: 30),
@@ -183,11 +184,15 @@ class CustomerDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLocationSection() {
+  Widget _buildLocationSection(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withValues(alpha: 0.1))),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color, 
+        borderRadius: BorderRadius.circular(15), 
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1))
+      ),
       child: Column(
         children: [
           Row(
@@ -251,7 +256,11 @@ class CustomerDetailScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withValues(alpha: 0.1))),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color, 
+        borderRadius: BorderRadius.circular(15), 
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1))
+      ),
       child: InkWell(
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CustomerHistoryScreen(customer: customer))),
         child: Row(
@@ -311,18 +320,20 @@ class CustomerDetailScreen extends StatelessWidget {
   Widget _buildBottomNav(BuildContext context) {
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
-      currentIndex: 0,
+      currentIndex: 1, // Thuộc phần Khách hàng
       selectedItemColor: Colors.blue,
       unselectedItemColor: Colors.grey,
       onTap: (index) {
-        if (index == 0) Navigator.pushReplacementNamed(context, AppRoutes.customerList);
-        if (index == 1) Navigator.pushReplacementNamed(context, AppRoutes.home); // Placeholder
-        if (index == 2) Navigator.pushReplacementNamed(context, AppRoutes.settings);
+        if (index == 0) Navigator.pushReplacementNamed(context, AppRoutes.home);
+        if (index == 1) Navigator.pushReplacementNamed(context, AppRoutes.customerList);
+        if (index == 2) Navigator.pushReplacementNamed(context, AppRoutes.history);
+        if (index == 3) Navigator.pushReplacementNamed(context, AppRoutes.settings);
       },
       items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
         BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Khách hàng'),
-        BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: 'Lịch trình'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Cá nhân'),
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Lịch sử'),
+        BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Cài đặt'),
       ],
     );
   }

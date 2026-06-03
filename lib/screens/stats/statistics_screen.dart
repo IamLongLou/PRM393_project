@@ -34,14 +34,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final String updateTime = DateFormat('HH:mm, dd/MM/yyyy').format(now);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Thống kê', style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: isDark ? Colors.white : Colors.black,
       ),
       body: Consumer2<CustomerProvider, BillingProvider>(
         builder: (context, customerProvider, billingProvider, child) {
@@ -209,7 +210,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
       ),
@@ -218,14 +219,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         children: [
           Icon(icon, size: 18, color: Colors.blue),
           const Spacer(),
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+          Text(label, style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white60 : Colors.grey, fontSize: 10)),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis)),
               const SizedBox(width: 4),
-              Text(unit, style: const TextStyle(color: Colors.grey, fontSize: 9)),
+              Text(unit, style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white38 : Colors.grey, fontSize: 9)),
             ],
           ),
         ],
@@ -238,7 +239,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 15)],
       ),
@@ -246,7 +247,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('Xu hướng tiêu thụ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const Text('Tiêu thụ 6 tháng gần nhất', style: TextStyle(color: Colors.grey, fontSize: 10)),
+          Text('Tiêu thụ 6 tháng gần nhất', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white60 : Colors.grey, fontSize: 10)),
           const SizedBox(height: 25),
           SizedBox(
             height: 160,
@@ -307,7 +308,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(15),
         border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
       ),
@@ -324,7 +325,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Tiêu thụ: ${bill.consumption.toInt()} m³', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text(DateFormat('dd/MM/yyyy').format(bill.date), style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                Text(DateFormat('dd/MM/yyyy').format(bill.date), style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white60 : Colors.grey, fontSize: 11)),
               ],
             ),
           ),
@@ -336,17 +337,20 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildBottomNav(BuildContext context) => BottomNavigationBar(
     type: BottomNavigationBarType.fixed,
-    currentIndex: 1,
+    currentIndex: 3, // Giả định thuộc phần cài đặt/thống kê
     selectedItemColor: Colors.blue,
     unselectedItemColor: Colors.grey,
     onTap: (index) {
       if (index == 0) Navigator.pushReplacementNamed(context, AppRoutes.home);
-      if (index == 2) Navigator.pushReplacementNamed(context, AppRoutes.sync);
+      if (index == 1) Navigator.pushReplacementNamed(context, AppRoutes.customerList);
+      if (index == 2) Navigator.pushReplacementNamed(context, AppRoutes.history);
+      if (index == 3) Navigator.pushReplacementNamed(context, AppRoutes.settings);
     },
     items: const [
-      BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Payment'),
-      BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Stats'),
-      BottomNavigationBarItem(icon: Icon(Icons.sync), label: 'Sync'),
+      BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
+      BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Khách hàng'),
+      BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Lịch sử'),
+      BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Cài đặt'),
     ],
   );
 }

@@ -11,11 +11,14 @@ class HistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Lịch sử thu tiền', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: isDark ? Colors.white : Colors.black,
         elevation: 0,
       ),
       body: Consumer<BillingProvider>(
@@ -36,7 +39,7 @@ class HistoryScreen extends StatelessWidget {
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 5),
                     elevation: 0,
-                    color: Colors.white,
+                    color: Theme.of(context).cardTheme.color,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                       side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
@@ -68,11 +71,11 @@ class HistoryScreen extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(bill.billCode, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                  Text(bill.billCode, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : Colors.black)),
                                   const SizedBox(height: 2),
-                                  Text(bill.customerName ?? 'N/A', style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87)),
-                                  Text('Mã KH: ${bill.customerCode ?? 'N/A'}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                  Text(DateFormat('dd/MM/yyyy HH:mm').format(bill.date), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                  Text(bill.customerName ?? 'N/A', style: TextStyle(fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : Colors.black87)),
+                                  Text('Mã KH: ${bill.customerCode ?? 'N/A'}', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey)),
+                                  Text(DateFormat('dd/MM/yyyy HH:mm').format(bill.date), style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey)),
                                 ],
                               ),
                             ),
@@ -83,7 +86,7 @@ class HistoryScreen extends StatelessWidget {
                                   style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent, fontSize: 15)
                                 ),
                                 Text('${bill.consumption.toInt()} m³', 
-                                  style: const TextStyle(fontSize: 12, color: Colors.grey)
+                                  style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey)
                                 ),
                               ],
                             ),

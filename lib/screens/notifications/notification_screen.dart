@@ -5,6 +5,7 @@ class NotificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     // Dữ liệu mẫu thông báo
     final List<Map<String, String>> notifications = [
       {
@@ -28,13 +29,13 @@ class NotificationScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Thông báo', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
-        backgroundColor: Colors.white,
+        title: Text('Thông báo', style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -47,7 +48,7 @@ class NotificationScreen extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 15),
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardTheme.color,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
             ),
@@ -70,14 +71,14 @@ class NotificationScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(item['title']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                          Text(item['time']!, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                          Text(item['title']!, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black)),
+                          Text(item['time']!, style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 10)),
                         ],
                       ),
                       const SizedBox(height: 5),
                       Text(
                         item['content']!,
-                        style: const TextStyle(color: Colors.black54, fontSize: 13, height: 1.4),
+                        style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 13, height: 1.4),
                       ),
                     ],
                   ),
