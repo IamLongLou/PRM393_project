@@ -17,8 +17,22 @@ class PaymentScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int consumption = newReading - customer.currentReading;
-    final double amount = (consumption > 0 ? consumption : 0) * 12000;
+    int consumption = newReading - customer.currentReading;
+    bool isRollover = false;
+    
+    // Xử lý trường hợp quay vòng đồng hồ (Ví dụ: 9999 -> 0001)
+    if (consumption < 0) {
+      // Giả định đồng hồ có 4 chữ số (max 9999), nếu âm thì có thể là quay vòng
+      // Nếu chỉ số cũ rất lớn (vùng 9xxx) và mới rất nhỏ (vùng 0xxx)
+      if (customer.currentReading > 9000 && newReading < 1000) {
+        consumption = (10000 - customer.currentReading) + newReading;
+        isRollover = true;
+      } else {
+        consumption = 0; // Vẫn để 0 nếu không phải quay vòng để tránh lỗi tiền âm
+      }
+    }
+
+    final double amount = consumption * 12000.0;
     final double vat = amount * 0.1;
     final double total = amount + vat;
     final format = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
@@ -31,6 +45,19 @@ class PaymentScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (newReading < customer.currentReading && !isRollover)
+              Container(
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.red[200]!)),
+                child: const Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: Colors.red),
+                    SizedBox(width: 10),
+                    Expanded(child: Text('Cảnh báo: Chỉ số mới đang thấp hơn chỉ số cũ. Vui lòng kiểm tra lại!', style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold))),
+                  ],
+                ),
+              ),
             _sectionHeader(Icons.person_outline, 'THÔNG TIN KHÁCH HÀNG'),
             _buildCustomerInfo(),
             const SizedBox(height: 25),
@@ -44,14 +71,17 @@ class PaymentScreen extends StatelessWidget {
             ),
             const SizedBox(height: 25),
             _sectionHeader(Icons.description_outlined, 'CHI TIẾT HÓA ĐƠN'),
-            _buildBillDetail(consumption, amount, vat, total, format),
+            _buildBillDetail(consumption, amount, vat, total, format, isRollover),
             const SizedBox(height: 25),
             _buildQRCode(total),
             const SizedBox(height: 40),
             ElevatedButton.icon(
-              onPressed: () => _confirmPayment(context, consumption, total),
+              onPressed: (newReading < customer.currentReading && !isRollover) ? null : () => _confirmPayment(context, consumption, total),
               icon: const Icon(Icons.receipt_long_outlined),
               label: const Text('Lập Hóa Đơn & In Biên Lai'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: (newReading < customer.currentReading && !isRollover) ? Colors.grey : Colors.blue,
+              ),
             ),
             const SizedBox(height: 15),
             const Center(child: Text('Dữ liệu sẽ được lưu tạm thời trên thiết bị và đồng bộ tự\nđộng khi có kết nối mạng ổn định.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 10))),
@@ -106,13 +136,13 @@ class PaymentScreen extends StatelessWidget {
     ),
   );
 
-  Widget _buildBillDetail(int consumption, double amount, double vat, double total, NumberFormat format) {
+  Widget _buildBillDetail(int consumption, double amount, double vat, double total, NumberFormat format, bool isRollover) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withOpacity(0.1))),
       child: Column(
         children: [
-          _billRow(Icons.info_outline, 'Tiêu thụ (Mới - Cũ)', '${consumption > 0 ? consumption : 0} m³'),
+          _billRow(Icons.info_outline, 'Tiêu thụ (Mới - Cũ)', '$consumption m³${isRollover ? " (Quay vòng)" : ""}'),
           _billRow(null, 'Đơn giá định mức', '12.000 đ/m³'),
           const Divider(height: 30),
           _billRow(null, 'Thành tiền (trước VAT)', format.format(amount)),

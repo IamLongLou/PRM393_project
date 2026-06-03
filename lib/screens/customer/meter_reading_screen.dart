@@ -71,7 +71,17 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
                       padding: const EdgeInsets.all(20.0),
                       child: ElevatedButton(
                         onPressed: _newReadingText.isEmpty ? null : () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => PhotoCaptureScreen(customer: widget.customer, newReading: int.parse(_newReadingText))));
+                          int newReading = int.parse(_newReadingText);
+                          if (newReading < widget.customer.currentReading) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Lỗi: Chỉ số mới không được nhỏ hơn chỉ số cũ!'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => PhotoCaptureScreen(customer: widget.customer, newReading: newReading)));
                         },
                         style: ElevatedButton.styleFrom(backgroundColor: _newReadingText.isEmpty ? Colors.grey[200] : Colors.blue, foregroundColor: _newReadingText.isEmpty ? Colors.grey : Colors.white),
                         child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text('Tiếp tục'), SizedBox(width: 10), Icon(Icons.arrow_forward, size: 18)]),
