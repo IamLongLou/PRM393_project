@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../../providers/customer_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/customer.dart';
@@ -11,44 +13,80 @@ import '../../core/constants/app_strings.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  Widget _buildWeatherCard() {
-    final hour = DateTime.now().hour;
-    IconData weatherIcon;
-    Color iconColor;
-    String temperature;
-
-    if (hour >= 6 && hour < 12) {
-      weatherIcon = Icons.wb_sunny;
-      iconColor = Colors.orange;
-      temperature = '28°C';
-    } else if (hour >= 12 && hour < 18) {
-      weatherIcon = Icons.wb_cloudy;
-      iconColor = Colors.blueGrey;
-      temperature = '32°C';
-    } else if (hour >= 18 && hour < 22) {
-      weatherIcon = Icons.nightlight_round;
-      iconColor = Colors.indigo;
-      temperature = '26°C';
-    } else {
-      weatherIcon = Icons.ac_unit;
-      iconColor = Colors.lightBlueAccent;
-      temperature = '22°C';
+  Future<Map<String, dynamic>> _getHanoiWeather() async {
+    try {
+      final response = await http.get(Uri.parse(
+          'https://api.open-meteo.com/v1/forecast?latitude=21.0285&longitude=105.8542&current=temperature_2m,weather_code'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'temp': '${data['current']['temperature_2m'].round()}°C',
+          'code': data['current']['weather_code'],
+        };
+      }
+    } catch (e) {
+      debugPrint('Error fetching weather: $e');
     }
+    return {'temp': '--°C', 'code': -1};
+  }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
-      ),
-      child: Row(
-        children: [
-          Icon(weatherIcon, color: iconColor, size: 20),
-          const SizedBox(width: 6),
-          Text(temperature, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        ],
-      ),
+  Widget _buildWeatherCard() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _getHanoiWeather(),
+      builder: (context, snapshot) {
+        IconData weatherIcon = Icons.wb_sunny;
+        Color iconColor = Colors.orange;
+        String temperature = '--°C';
+
+        if (snapshot.hasData) {
+          temperature = snapshot.data!['temp'];
+          int code = snapshot.data!['code'];
+
+          if (code == 0) {
+            weatherIcon = Icons.wb_sunny;
+            iconColor = Colors.orange;
+          } else if (code >= 1 && code <= 3) {
+            weatherIcon = Icons.wb_cloudy;
+            iconColor = Colors.blueGrey;
+          } else if (code >= 51 && code <= 67) {
+            weatherIcon = Icons.umbrella;
+            iconColor = Colors.blue;
+          } else if (code >= 95) {
+            weatherIcon = Icons.thunderstorm;
+            iconColor = Colors.deepPurple;
+          } else if (code == -1) {
+            // Fallback based on time if API fails
+            final hour = DateTime.now().hour;
+            if (hour >= 18 || hour < 6) {
+              weatherIcon = Icons.nightlight_round;
+              iconColor = Colors.indigo;
+            }
+          }
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+          ),
+          child: Row(
+            children: [
+              Icon(weatherIcon, color: iconColor, size: 20),
+              const SizedBox(width: 6),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Hà Nội', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                  Text(temperature, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, height: 1.1)),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
