@@ -173,6 +173,7 @@ class CustomerCard extends StatelessWidget {
           child: Column(
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CircleAvatar(
                     radius: 20,
@@ -184,11 +185,35 @@ class CustomerCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(customer.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                        Text(customer.address, style: const TextStyle(color: Colors.grey, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        const SizedBox(height: 4),
+                        Text(customer.code, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
-                  Text(customer.code, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  const Icon(Icons.location_on, size: 16, color: Colors.blue),
+                  const SizedBox(width: 6),
+                  Expanded(child: Text(customer.address, style: const TextStyle(color: Colors.grey, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                ],
+              ),
+              const SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _actionIcon(Icons.phone_outlined, 'Gọi điện', Colors.green, () => _makeCall(customer.phone)),
+                  _actionIcon(Icons.chat_bubble_outline, 'Nhắn tin', Colors.orange, () => _sendSMS(customer.phone)),
+                  _actionIcon(Icons.map_outlined, 'Bản đồ', Colors.blue, () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RouteOptimizationScreen(customer: customer),
+                      ),
+                    );
+                  }),
                 ],
               ),
               const SizedBox(height: 15),

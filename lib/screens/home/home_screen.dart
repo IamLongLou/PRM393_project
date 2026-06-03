@@ -62,7 +62,7 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(user?.fullName ?? 'Người dùng', user?.role ?? 'user'),
+            _buildAppBar(context, user?.fullName ?? 'Người dùng', user?.role ?? 'user'),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -106,7 +106,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAppBar(String name, String role) {
+  Widget _buildAppBar(BuildContext context, String name, String role) {
     String roleLabel = role == 'admin' ? 'Quản trị' : (role == 'staff' ? 'Nhân viên' : 'Khách hàng');
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -133,16 +133,22 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          const Stack(
-            children: [
-              Icon(Icons.notifications_none, size: 28),
-              Positioned(right: 0, top: 0, child: CircleAvatar(radius: 5, backgroundColor: Colors.red)),
-            ],
+          InkWell(
+            onTap: () => Navigator.pushNamed(context, AppRoutes.notifications),
+            child: const Stack(
+              children: [
+                Icon(Icons.notifications_none, size: 28),
+                Positioned(right: 0, top: 0, child: CircleAvatar(radius: 5, backgroundColor: Colors.red)),
+              ],
+            ),
           ),
           const SizedBox(width: 15),
-          CircleAvatar(
-            radius: 18,
-            backgroundImage: NetworkImage('https://ui-avatars.com/api/?name=$name&background=random'),
+          InkWell(
+            onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
+            child: CircleAvatar(
+              radius: 18,
+              backgroundImage: NetworkImage('https://ui-avatars.com/api/?name=$name&background=random'),
+            ),
           ),
         ],
       ),

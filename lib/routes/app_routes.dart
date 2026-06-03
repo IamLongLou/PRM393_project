@@ -7,6 +7,10 @@ import '../screens/sync/sync_screen.dart';
 import '../screens/history/history_screen.dart';
 import '../screens/stats/statistics_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/profile/profile_screen.dart';
+import '../screens/profile/edit_profile_screen.dart';
+import '../screens/profile/change_password_screen.dart';
+import '../screens/notifications/notification_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -17,6 +21,10 @@ class AppRoutes {
   static const String history = '/history';
   static const String statistics = '/statistics';
   static const String settings = '/settings';
+  static const String profile = '/profile';
+  static const String editProfile = '/edit-profile';
+  static const String changePassword = '/change-password';
+  static const String notifications = '/notifications';
 
   static Map<String, WidgetBuilder> get routes => {
     splash: (context) => const SplashScreen(),
@@ -30,5 +38,9 @@ class AppRoutes {
     history: (context) => const HistoryScreen(),
     statistics: (context) => const StatisticsScreen(),
     settings: (context) => const SettingsScreen(),
+    profile: (context) => const ProfileScreen(),
+    editProfile: (context) => const EditProfileScreen(),
+    changePassword: (context) => const ChangePasswordScreen(),
+    notifications: (context) => const NotificationScreen(),
   };
 }
