@@ -94,9 +94,10 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final formattedDate = FormatterUtils.formatDate(DateTime.now(), pattern: 'EEEE, d MMMM, yyyy');
     final user = Provider.of<AuthProvider>(context).user;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
       body: SafeArea(
         child: Column(
           children: [
@@ -132,7 +133,7 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 15),
                     _buildFunctionGrid(context, user?.role ?? 'user'),
                     const SizedBox(height: 20),
-                    _buildNoticeBanner(user?.role ?? 'user'),
+                    _buildNoticeBanner(context, user?.role ?? 'user'),
                   ],
                 ),
               ),
@@ -270,12 +271,23 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildStatCard(BuildContext context, String value, String label, Color color, int tabIndex) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Expanded(
       child: InkWell(
         onTap: () => Navigator.pushNamed(context, AppRoutes.customerList, arguments: {'tabIndex': tabIndex}),
         child: Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: Theme.of(context).cardTheme.color, borderRadius: BorderRadius.circular(15), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)]),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white, 
+            borderRadius: BorderRadius.circular(15), 
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05), 
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ],
+          ),
           child: Row(
             children: [
               Icon(Icons.analytics_outlined, color: color, size: 24),
@@ -283,7 +295,7 @@ class HomeScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
                   Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11)),
                 ],
               ),
@@ -338,66 +350,136 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _funcCard(BuildContext context, String title, String desc, IconData icon, Color color, String route, {bool hasBadge = false, String badgeValue = '0'}) {
-    return Material(
-      color: Theme.of(context).cardTheme.color,
-      borderRadius: BorderRadius.circular(15),
-      child: InkWell(
-        onTap: () => Navigator.pushNamed(context, route),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(15),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(15),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                    child: Icon(icon, color: color, size: 24),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  const SizedBox(height: 4),
-                  Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 10), maxLines: 2),
-                ],
-              ),
-            ),
-            if (hasBadge)
-              Positioned(
-                right: 10, top: 10,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                  child: Text(badgeValue, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(15),
+        child: InkWell(
+          onTap: () => Navigator.pushNamed(context, route),
+          borderRadius: BorderRadius.circular(15),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(15),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                      child: Icon(icon, color: color, size: 24),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      title, 
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        fontSize: 16,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      desc, 
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.grey[600], 
+                        fontSize: 11,
+                        height: 1.2,
+                      ), 
+                      maxLines: 2,
+                    ),
+                  ],
                 ),
               ),
-          ],
+              if (hasBadge)
+                Positioned(
+                  right: 12, top: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red, 
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                    child: Center(
+                      child: Text(badgeValue, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildNoticeBanner(String role) {
-    String message = role == 'user' 
+  Widget _buildNoticeBanner(BuildContext context, String role) {
+    bool isUser = role == 'user';
+    String title = isUser ? 'Lịch bảo trì' : 'Thông báo hệ thống';
+    String message = isUser 
       ? 'Khu vực của bạn sẽ tạm ngừng cấp nước từ 23h đêm nay để bảo trì định kỳ. Quý khách vui lòng dự trữ nước.'
-      : 'Khu vực Hòa Lạc, huyện Thạch Thất đang có có sự cố mất nước ở trường ĐH FPT. Vui lòng nhắc nhở sinh viên ngừng đến trường.';
+      : 'Khu vực Hòa Lạc, huyện Thạch Thất đang có sự cố mất nước ở trường ĐH FPT. Vui lòng nhắc nhở sinh viên ngừng đến trường.';
+    IconData icon = isUser ? Icons.build_circle_outlined : Icons.info_outline;
+    Color color = isUser ? Colors.orange : Colors.blue;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
       
     return Container(
       padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: const Color(0xFFE3F2FD), borderRadius: BorderRadius.circular(15)),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white, 
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1), 
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline, color: Colors.blue),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Thông báo hệ thống', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 4),
-                Text(message, style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black)),
+                    Text('10 phút trước', style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 10)),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  message, 
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54, 
+                    fontSize: 12, 
+                    height: 1.4,
+                  ),
+                ),
               ],
             ),
           ),

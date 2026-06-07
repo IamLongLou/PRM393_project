@@ -6,7 +6,7 @@ class SyncProvider with ChangeNotifier {
   List<Bill> _unsyncedBills = [
     Bill(
       id: 101,
-      customerId: 1, // Nguyen Bao Long
+      customerId: 1, // Lưu Bị
       billCode: 'KH001',
       date: DateTime(2024, 6, 5, 14, 31),
       oldReading: 110,
@@ -20,7 +20,7 @@ class SyncProvider with ChangeNotifier {
     ),
     Bill(
       id: 102,
-      customerId: 2, // Pham Tu Anh
+      customerId: 2, // Quan Vũ
       billCode: 'KH002',
       date: DateTime(2024, 6, 5, 14, 32),
       oldReading: 70,
@@ -34,7 +34,7 @@ class SyncProvider with ChangeNotifier {
     ),
     Bill(
       id: 103,
-      customerId: 5, // Truong Tri Binh
+      customerId: 5, // Tào Tháo
       billCode: 'KH005',
       date: DateTime(2024, 6, 5, 14, 33),
       oldReading: 320,
