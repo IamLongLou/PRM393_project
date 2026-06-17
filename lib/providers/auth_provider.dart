@@ -4,7 +4,7 @@ import '../services/database_helper.dart';
 import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final _db = DatabaseHelper.instance;
   User? _user;
   bool _isLoading = false;
 
@@ -12,89 +12,69 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _user != null;
 
-  AuthProvider() {
-    _checkLastSession();
-  }
+  AuthProvider() { _check(); }
 
-  Future<void> _checkLastSession() async {
-    _user = await _dbHelper.getLastSession();
+  Future<void> _check() async {
+    _user = await _db.getLastSession();
     notifyListeners();
   }
 
-  Future<bool> login(String username, String password) async {
-    _isLoading = true;
+  Future<bool> login(String u, String p) async {
+    _isLoading = true; 
     notifyListeners();
-
-    // 1. Gọi API Online thật
-    final response = await ApiService.login(username, password);
-
-    if (response != null) {
-      final userData = response['user'];
-      final token = response['token'];
-
-      _user = User(
-        username: userData['username'],
-        fullName: userData['fullName'],
-        role: userData['role'],
-        email: userData['email'],
-        phone: userData['phone'],
-      );
-      
-      // Lưu session vào SQLite để dùng offline
-      await _dbHelper.saveSession(_user!, token);
-      
-      _isLoading = false;
+    final res = await ApiService.login(u, p);
+    if (res != null) {
+      _user = User.fromMap(res['user']);
+      await _db.saveSession(_user!, res['token']);
+      _isLoading = false; 
       notifyListeners();
       return true;
     } else {
-      // 2. Xử lý Offline unlock nếu API lỗi/không có mạng
-      final lastUser = await _dbHelper.getLastSession();
-      if (lastUser != null && lastUser.username == username) {
-        _user = lastUser;
-        _isLoading = false;
+      final last = await _db.getLastSession();
+      if (last != null && last.username == u) {
+        _user = last; 
+        _isLoading = false; 
         notifyListeners();
         return true;
       }
     }
-
-    _isLoading = false;
+    _isLoading = false; 
     notifyListeners();
     return false;
   }
 
   Future<bool> updateProfile(String name, String email, String phone) async {
-    _isLoading = true;
+    if (_user == null) return false;
+    _isLoading = true; 
     notifyListeners();
+    // Simulate API update
     await Future.delayed(const Duration(milliseconds: 500));
-    
-    if (_user != null) {
-      _user = _user!.copyWith(fullName: name, email: email, phone: phone);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    }
-    _isLoading = false;
-    return false;
+    _user = User(
+      username: _user!.username,
+      fullName: name,
+      role: _user!.role,
+      email: email,
+      phone: phone,
+    );
+    await _db.saveSession(_user!, null);
+    _isLoading = false; 
+    notifyListeners();
+    return true;
   }
 
   Future<bool> changePassword(String oldPass, String newPass) async {
-    _isLoading = true;
+    _isLoading = true; 
     notifyListeners();
+    // Simulate API update
     await Future.delayed(const Duration(milliseconds: 800));
-    
-    // Trong thực tế sẽ gọi API, ở đây giả định luôn thành công nếu ko trống
-    if (newPass.isNotEmpty) {
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    }
-    _isLoading = false;
-    return false;
+    _isLoading = false; 
+    notifyListeners();
+    return true;
   }
 
   Future<void> logout() async {
-    _user = null;
-    await _dbHelper.clearSession();
+    _user = null; 
+    await _db.clearSession(); 
     notifyListeners();
   }
 }

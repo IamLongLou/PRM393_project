@@ -1,276 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../providers/sync_provider.dart';
-import '../../routes/app_routes.dart';
-import '../../models/bill.dart';
 
 class SyncScreen extends StatefulWidget {
   const SyncScreen({super.key});
-
   @override
   State<SyncScreen> createState() => _SyncScreenState();
 }
 
 class _SyncScreenState extends State<SyncScreen> {
-
-  Future<void> _handleSync(BuildContext context) async {
-    final syncProvider = context.read<SyncProvider>();
-    
-    if (syncProvider.unsyncedBills.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không có dữ liệu mới cần đồng bộ.')),
-        );
-      }
-      return;
-    }
-
-    await syncProvider.syncAll();
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đồng bộ thành công!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SyncProvider>().fetchUnsyncedBills();
-    });
+    Future.microtask(() => context.read<SyncProvider>().fetchUnsynced());
   }
 
   @override
   Widget build(BuildContext context) {
     final syncProvider = context.watch<SyncProvider>();
-    final unsyncedBills = syncProvider.unsyncedBills;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bills = syncProvider.unsyncedBills;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Trung tâm Đồng bộ', style: TextStyle(fontWeight: FontWeight.bold)),
-        elevation: 0,
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        foregroundColor: isDark ? Colors.white : Colors.black,
-      ),
+      appBar: AppBar(title: const Text('Đồng bộ dữ liệu')),
       body: Column(
         children: [
-          _buildHeader(unsyncedBills.length),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('DANH SÁCH PHIẾU THU', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(5)),
-                  child: Text('${unsyncedBills.length} bản ghi', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                )
-              ],
-            ),
-          ),
-          Expanded(
-            child: unsyncedBills.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: const EdgeInsets.all(15),
-                    itemCount: unsyncedBills.length,
-                    itemBuilder: (context, index) => _syncCard(unsyncedBills[index]),
-                  ),
-          ),
-          _infoBox(),
-          _buildSyncButton(context, unsyncedBills.length, syncProvider.isSyncing),
-        ],
-      ),
-      bottomNavigationBar: _buildBottomNav(context),
-    );
-  }
-
-  Widget _buildHeader(int count) {
-    final bool hasData = count > 0;
-    return Container(
-      padding: const EdgeInsets.all(15),
-      margin: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: hasData ? const Color(0xFF00E5FF) : Colors.green[400],
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: [
-          Icon(hasData ? Icons.wifi_off : Icons.cloud_done, color: Colors.white),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hasData ? 'Cần Đồng Bộ' : 'Đã Đồng Bộ',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  hasData ? '$count bản ghi đang chờ đẩy lên hệ thống' : 'Dữ liệu của bạn đã được cập nhật mới nhất',
-                  style: const TextStyle(color: Colors.white70, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
-            child: Text(
-              hasData ? 'Pending' : 'Synced',
-              style: TextStyle(
-                color: hasData ? const Color(0xFF00E5FF) : Colors.green,
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
+            padding: const EdgeInsets.all(20),
+            color: Colors.blue.withOpacity(0.1),
+            child: Text('Có ${bills.length} hóa đơn chờ đồng bộ.'),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: bills.length,
+              itemBuilder: (context, i) => ListTile(
+                title: Text('HĐ: ${bills[i].billCode}'),
+                subtitle: Text('KH: ${bills[i].customerName}'),
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _syncCard(Bill bill) {
-    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.cyan.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('MÃ PHIẾU: ${bill.billCode}', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white60 : Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: Colors.cyan.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(10)),
-                child: const Text('CHỜ XỬ LÝ', style: TextStyle(color: Colors.cyan, fontSize: 9, fontWeight: FontWeight.bold)),
-              )
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              const Icon(Icons.person_pin, color: Colors.cyan, size: 18),
-              const SizedBox(width: 10),
-              Text('Khách hàng: ${bill.customerId}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.access_time, size: 14, color: Colors.grey),
-              const SizedBox(width: 8),
-              Text(DateFormat('dd/MM/yyyy, HH:mm').format(bill.date), style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white60 : Colors.grey, fontSize: 11)),
-            ],
-          ),
-          const Divider(height: 30, thickness: 0.1),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Tổng thanh toán:', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54, fontSize: 12)),
-              Text(currencyFormat.format(bill.totalAmount), style: const TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold, fontSize: 16)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.cloud_done_outlined, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 15),
-          const Text('Tuyệt vời!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          Text('Tất cả dữ liệu đã được đồng bộ', style: TextStyle(color: Colors.grey[500])),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoBox() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.cyan.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.cyan.withValues(alpha: 0.1)),
-      ),
-      child: const Column(
-        children: [
-          Icon(Icons.info_outline, color: Colors.cyan, size: 30),
-          SizedBox(height: 10),
-          Text(
-            'Dữ liệu sẽ được lưu trữ an toàn trên thiết bị cho đến\nkhi quá trình đồng bộ hoàn tất.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.cyan, fontSize: 11),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSyncButton(BuildContext context, int count, bool isSyncing) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        children: [
-          ElevatedButton.icon(
-            onPressed: isSyncing ? null : () => _handleSync(context),
-            icon: isSyncing 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : const Icon(Icons.sync),
-            label: Text(isSyncing ? 'Đang đồng bộ...' : 'Đồng bộ Ngay'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00E5FF),
-              minimumSize: const Size(double.infinity, 55),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: ElevatedButton(
+              onPressed: syncProvider.isSyncing || bills.isEmpty ? null : () => syncProvider.syncAll(),
+              child: Text(syncProvider.isSyncing ? 'Đang gửi...' : 'Đồng bộ ngay'),
             ),
-          ),
-          const SizedBox(height: 10),
-          const Text('YÊU CẦU KẾT NỐI INTERNET (4G/WIFI)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+          )
         ],
       ),
-    );
-  }
-
-  Widget _buildBottomNav(BuildContext context) {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      currentIndex: 3, // Giả định thuộc phần cài đặt/hệ thống
-      selectedItemColor: Colors.blue,
-      unselectedItemColor: Colors.grey,
-      onTap: (index) {
-        if (index == 0) Navigator.pushReplacementNamed(context, AppRoutes.home);
-        if (index == 1) Navigator.pushReplacementNamed(context, AppRoutes.customerList);
-        if (index == 2) Navigator.pushReplacementNamed(context, AppRoutes.history);
-        if (index == 3) Navigator.pushReplacementNamed(context, AppRoutes.settings);
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Trang chủ'),
-        BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Khách hàng'),
-        BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Lịch sử'),
-        BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Cài đặt'),
-      ],
     );
   }
 }

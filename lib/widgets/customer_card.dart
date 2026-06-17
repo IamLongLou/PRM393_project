@@ -157,7 +157,8 @@ class CustomerCard extends StatelessWidget {
         Bill? latestBill;
         if (snapshot.hasData) {
           try {
-            latestBill = snapshot.data!.firstWhere((b) => b.customerId == customer.id);
+            final List<Bill> bills = snapshot.data!;
+            latestBill = bills.firstWhere((b) => b.customerId == customer.id);
           } catch (e) {
             // No bill found for this customer yet
           }

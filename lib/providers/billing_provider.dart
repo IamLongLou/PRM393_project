@@ -3,39 +3,31 @@ import '../models/bill.dart';
 import '../services/database_helper.dart';
 
 class BillingProvider with ChangeNotifier {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final _db = DatabaseHelper.instance;
   List<Bill> _customerBills = [];
-  bool _isLoading = false;
 
   List<Bill> get customerBills => _customerBills;
-  bool get isLoading => _isLoading;
 
   Future<void> fetchBillsByCustomer(int customerId) async {
-    _isLoading = true;
-    notifyListeners();
-    
-    // Lấy từ SQLite
-    _customerBills = await _dbHelper.getBillsByCustomerId(customerId);
-    
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> saveBill(Bill bill) async {
-    // 1. Lưu vào SQLite local với trạng thái isSynced = false
-    await _dbHelper.insertBill(bill);
-    
-    // 2. Cập nhật UI ngay lập tức
-    _customerBills.insert(0, bill);
+    _customerBills = await _db.getBillsByCustomer(customerId);
     notifyListeners();
   }
 
   Future<List<Bill>> getAllBills() async {
-    return await _dbHelper.getAllBills();
+    final db = await _db.database;
+    final res = await db.query('bills', orderBy: 'date DESC');
+    return res.map((m) => Bill.fromMap(m)).toList();
   }
 
-  Future<void> markBillsAsSynced(List<Bill> syncedBills) async {
-    await _dbHelper.markBillsAsSynced(syncedBills);
+  Future<void> saveBill(Bill bill) async {
+    await _db.insertBill(bill);
+    await _db.updateCustomerReading(bill.customerId, bill.newReading);
+    _customerBills.insert(0, bill);
+    notifyListeners();
+  }
+
+  Future<void> markBillsAsSynced(List<Bill> bills) async {
+    await _db.markBillsAsSynced(bills);
     notifyListeners();
   }
 }

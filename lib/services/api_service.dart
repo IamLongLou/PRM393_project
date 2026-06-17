@@ -1,71 +1,61 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/user.dart';
-import '../models/customer.dart';
+import 'package:flutter/foundation.dart'; // Thêm để dùng kIsWeb
 import '../models/bill.dart';
 
 class ApiService {
-  // Đối với Android Emulator, 10.0.2.2 trỏ về localhost của máy tính
-  static const String baseUrl = 'http://10.0.2.2:8080/api';
+  // Tự động chọn URL phù hợp: Web dùng localhost, Android dùng 10.0.2.2
+  // Thử bỏ /api nếu backend của bạn không có context-path này
+  static String get baseUrl => kIsWeb 
+    ? 'http://localhost:8080/api' 
+    : 'http://10.0.2.2:8080/api';
 
-  static Future<Map<String, dynamic>?> login(String username, String password) async {
+  static Future<Map<String, dynamic>?> login(String u, String p) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'username': username, 'password': password}),
+      print('Calling Login: $baseUrl/auth/login');
+      final res = await http.post(
+        Uri.parse('$baseUrl/auth/login'), 
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        }, 
+        body: jsonEncode({'username': u, 'password': p})
       );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(utf8.decode(response.bodyBytes));
-      }
+      print('Login Status: ${res.statusCode}');
+      if (res.statusCode == 200) return jsonDecode(utf8.decode(res.bodyBytes));
     } catch (e) {
-      print('Login Error: $e');
+      print('Login error: $e');
     }
     return null;
   }
 
   static Future<Map<String, dynamic>?> bootstrap() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/bootstrap'));
-      if (response.statusCode == 200) {
-        return jsonDecode(utf8.decode(response.bodyBytes));
+      print('Calling Bootstrap: $baseUrl/bootstrap');
+      final res = await http.get(Uri.parse('$baseUrl/bootstrap'));
+      print('Bootstrap Status: ${res.statusCode}');
+      if (res.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(res.bodyBytes));
+        print('Data received: ${data['customers']?.length} customers');
+        return data;
       }
     } catch (e) {
-      print('Bootstrap Error: $e');
+      print('Bootstrap error: $e');
     }
     return null;
   }
 
-  static Future<List<dynamic>?> syncBills(List<Bill> bills) async {
+  static Future<bool> syncBills(List<Bill> bills) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/sync/bills'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'bills': bills.map((b) => {
-            'customerId': b.customerId,
-            'billCode': b.billCode,
-            'date': b.date.toIso8601String(),
-            'oldReading': b.oldReading,
-            'newReading': b.newReading,
-            'consumption': b.consumption,
-            'unitPrice': b.unitPrice,
-            'amount': b.amount,
-            'vat': b.vat,
-            'totalAmount': b.totalAmount,
-            'imagePath': b.imagePath,
-            'isSynced': true, // Khi gửi lên server thành công nó sẽ là true
-          }).toList()
-        }),
+      final res = await http.post(
+        Uri.parse('$baseUrl/sync/bills'), 
+        headers: {'Content-Type': 'application/json'}, 
+        body: jsonEncode({'bills': bills.map((b) => b.toMap()..['isSynced'] = 1).toList()})
       );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(utf8.decode(response.bodyBytes));
-      }
+      return res.statusCode == 200;
     } catch (e) {
-      print('Sync Error: $e');
+      print('Sync error: $e');
     }
-    return null;
+    return false;
   }
 }

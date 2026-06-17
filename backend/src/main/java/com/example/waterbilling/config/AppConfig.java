@@ -23,10 +23,11 @@ public class AppConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**")
-                        .allowedOriginPatterns(allowedOrigins)
+                registry.addMapping("/**") // Áp dụng cho toàn bộ các endpoint bao gồm cả /api
+                        .allowedOriginPatterns("*") // Cho phép mọi domain gọi vào
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
+                        .allowedHeaders("*")
+                        .allowCredentials(false); // Để false nếu không dùng cookies
             }
         };
     }

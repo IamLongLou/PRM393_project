@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/customer_provider.dart';
 import '../../routes/app_routes.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -88,27 +89,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (mounted) {
       if (success) {
+        // Làm mới danh sách khách hàng ngay sau khi login thành công
+        Provider.of<CustomerProvider>(context, listen: false).refresh();
+
         _showNotification('Đăng nhập thành công!', true);
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) Navigator.pushReplacementNamed(context, AppRoutes.home);
         });
       } else {
         _showNotification('Tài khoản hoặc mật khẩu không chính xác!', false);
-      }
-    }
-  }
-
-  void _quickAccess() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.login('nhanvien01', '123456');
-    if (mounted) {
-      if (success) {
-        _showNotification('Truy cập nhanh thành công!', true);
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) Navigator.pushReplacementNamed(context, AppRoutes.home);
-        });
-      } else {
-        _showNotification('Truy cập nhanh thất bại!', false);
       }
     }
   }
@@ -232,10 +221,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              // Quick Access Box
-              const SizedBox(height: 30),
-              _buildQuickAccessBox(),
-
               const SizedBox(height: 60),
               const Text('ⓘ PHIÊN BẢN 2.4.0 (BUILD 2026125)', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
               const SizedBox(height: 5),
@@ -264,61 +249,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
-  Widget _buildQuickAccessBox() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.green.withOpacity(0.1)),
-      ),
-      child: Column(
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: Colors.green, size: 22),
-              SizedBox(width: 10),
-              Text('Truy cập nhanh (Demo Mode)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87)),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              _demoInfo('User: nhanvien01'),
-              const SizedBox(width: 10),
-              _demoInfo('Pass: 123456'),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: OutlinedButton(
-              onPressed: _quickAccess,
-              style: OutlinedButton.styleFrom(
-                backgroundColor: Colors.white,
-                side: const BorderSide(color: Colors.green, width: 0.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-              ),
-              child: const Text('Vào Dashboard ngay', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _demoInfo(String text) => Expanded(
-    child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Center(
-        child: Text(text, style: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w500)),
-      ),
-    ),
-  );
 }

@@ -104,7 +104,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> with SingleTick
           Expanded(
             child: TextField(
               controller: _searchController,
-              onChanged: (value) => context.read<CustomerProvider>().searchCustomers(value),
+              onChanged: (value) => Provider.of<CustomerProvider>(context, listen: false).searchCustomers(value),
               decoration: InputDecoration(
                 hintText: 'Tìm tên hoặc mã KH...',
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
@@ -146,6 +146,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> with SingleTick
   Widget _buildPendingTab() {
     return Consumer<CustomerProvider>(
       builder: (context, provider, _) {
+        if (provider.isLoading && provider.customers.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final list = provider.customers.where((c) => c.status != CollectionStatus.completed).toList();
         return _buildListView(list, isPending: true);
       },
@@ -155,16 +158,20 @@ class _CustomerListScreenState extends State<CustomerListScreen> with SingleTick
   Widget _buildCompletedTab() {
     return Consumer2<CustomerProvider, BillingProvider>(
       builder: (context, custProv, billProv, _) {
+        if (custProv.isLoading && custProv.customers.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final list = custProv.customers.where((c) => c.status == CollectionStatus.completed).toList();
         return FutureBuilder<List<Bill>>(
-          future: billProv.getAllBills(),
+          future: Provider.of<BillingProvider>(context, listen: false).getAllBills(),
           builder: (context, snapshot) {
             double totalToday = 0;
             if (snapshot.hasData) {
+              final List<Bill> bills = snapshot.data!;
               final today = DateTime.now();
-              totalToday = snapshot.data!
+              totalToday = bills
                 .where((b) => b.date.day == today.day && b.date.month == today.month)
-                .fold(0, (sum, b) => sum + b.totalAmount);
+                .fold(0.0, (sum, b) => sum + b.totalAmount);
             }
             return Column(
               children: [

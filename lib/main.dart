@@ -32,7 +32,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Water Billing',

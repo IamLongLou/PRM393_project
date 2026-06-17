@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/customer.dart';
+import '../../models/bill.dart';
 import '../../providers/billing_provider.dart';
 import '../../routes/app_routes.dart';
-import 'meter_reading_screen.dart';
 import 'package:intl/intl.dart';
 
 class CustomerHistoryScreen extends StatefulWidget {
@@ -18,7 +18,7 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<BillingProvider>().fetchBillsByCustomer(widget.customer.id ?? 1);
+    Provider.of<BillingProvider>(context, listen: false).fetchBillsByCustomer(widget.customer.id ?? 1);
   }
 
   @override
@@ -41,13 +41,15 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
                   const SizedBox(width: 8),
                   const Text('Danh sách kỳ thanh toán', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                   const Spacer(),
-                  Text('${context.watch<BillingProvider>().customerBills.length} bản ghi', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                  Consumer<BillingProvider>(
+                    builder: (context, provider, _) => Text('${provider.customerBills.length} bản ghi', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                  ),
                 ],
               ),
             ),
             Consumer<BillingProvider>(
               builder: (context, provider, child) {
-                final bills = provider.customerBills;
+                final List<Bill> bills = provider.customerBills;
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -74,7 +76,7 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
     return Container(
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withOpacity(0.1))),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withValues(alpha: 0.1))),
       child: Row(
         children: [
           CircleAvatar(radius: 25, backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=${widget.customer.id}')),
@@ -84,12 +86,12 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(widget.customer.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const Text('123 Đường Lê Lợi, Quận 1, TP.HCM', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                const Text('Địa chỉ đăng ký thu tiền', style: TextStyle(color: Colors.grey, fontSize: 11)),
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(5)),
-                  child: const Text('MÃ KH: KH-99210', style: TextStyle(color: Colors.blue, fontSize: 9, fontWeight: FontWeight.bold)),
+                  decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(5)),
+                  child: Text('MÃ KH: ${widget.customer.code}', style: const TextStyle(color: Colors.blue, fontSize: 9, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -106,7 +108,7 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
         children: [
           _statBox('Trung bình', '15.2 m³', Colors.green),
           const SizedBox(width: 15),
-          _statBox('Tổng nợ', '185.000đ', Colors.blue),
+          _statBox('Tổng nợ', '0đ', Colors.blue),
         ],
       ),
     );
@@ -115,7 +117,7 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
   Widget _statBox(String label, String value, Color color) => Expanded(
     child: Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: color.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.1))),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.1))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -127,17 +129,17 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
     ),
   );
 
-  Widget _buildBillCard(bill, NumberFormat format) {
+  Widget _buildBillCard(Bill bill, NumberFormat format) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withOpacity(0.1))),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withValues(alpha: 0.1))),
       child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.blue.withOpacity(0.05), shape: BoxShape.circle), child: const Icon(Icons.calendar_month, color: Colors.blue, size: 18)),
+                Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.05), shape: BoxShape.circle), child: const Icon(Icons.calendar_month, color: Colors.blue, size: 18)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -148,7 +150,7 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
                     ],
                   ),
                 ),
-                Text(bill.isSynced ? 'Đã thanh toán' : 'Chưa ghi', style: TextStyle(color: bill.isSynced ? Colors.black87 : Colors.grey, fontSize: 11, fontWeight: FontWeight.bold)),
+                Text(bill.isSynced ? 'Đã đồng bộ' : 'Chưa đồng bộ', style: TextStyle(color: bill.isSynced ? Colors.green : Colors.orange, fontSize: 11, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 4),
                 const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
               ],
@@ -171,7 +173,7 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                      decoration: BoxDecoration(color: Colors.blue.withOpacity(0.05), borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         children: [
                           const Icon(Icons.water_drop, color: Colors.blue, size: 14),
@@ -218,7 +220,7 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
         children: [
           Icon(Icons.info_outline, size: 16, color: Colors.grey),
           const SizedBox(width: 10),
-          Expanded(child: Text('Mẹo: Nhấn vào thẻ hóa đơn bất kỳ để cập nhật hoặc ghi mới chỉ số nước cho kỳ hiện tại.', style: TextStyle(fontSize: 10, color: Colors.grey))),
+          Expanded(child: Text('Dữ liệu hiển thị dựa trên lịch sử đã ghi nhận trên thiết bị.', style: TextStyle(fontSize: 10, color: Colors.grey))),
         ],
       ),
     );
@@ -227,7 +229,7 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
   Widget _buildBottomNav() {
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
-      currentIndex: 2, // Thuộc phần Lịch sử
+      currentIndex: 2,
       selectedItemColor: Colors.blue,
       unselectedItemColor: Colors.grey,
       onTap: (index) {

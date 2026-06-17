@@ -23,7 +23,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     super.initState();
     // Khởi tạo chọn khách hàng đầu tiên sau khi build xong
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final customers = context.read<CustomerProvider>().allCustomers;
+      final List<Customer> customers = Provider.of<CustomerProvider>(context, listen: false).allCustomers;
       if (customers.isNotEmpty) {
         setState(() => _selectedCustomerId = customers.first.id);
       }
@@ -46,7 +46,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       ),
       body: Consumer2<CustomerProvider, BillingProvider>(
         builder: (context, customerProvider, billingProvider, child) {
-          final customers = customerProvider.allCustomers;
+          final List<Customer> customers = customerProvider.allCustomers;
           if (customers.isEmpty) return const Center(child: Text('Không có dữ liệu khách hàng.'));
           
           final selectedId = _selectedCustomerId ?? customers.first.id;
@@ -55,7 +55,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           return FutureBuilder<List<Bill>>(
             future: billingProvider.getAllBills(),
             builder: (context, snapshot) {
-              final allBills = snapshot.data ?? [];
+              final List<Bill> allBills = snapshot.data ?? [];
               final customerBills = allBills.where((b) => b.customerId == selectedId).toList();
               
               // Chuẩn bị dữ liệu biểu đồ (6 tháng gần nhất)

@@ -117,7 +117,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     Text('Hôm nay: $formattedDate', style: const TextStyle(color: Colors.grey, fontSize: 14)),
                     const SizedBox(height: 20),
-                    if (user?.role != 'user') _buildReadyBanner(),
+                    if (user?.role != 'user') _buildReadyBanner(context),
                     const SizedBox(height: 20),
                     if (user?.role == 'staff') _buildStaffStats(context),
                     if (user?.role == 'admin') _buildAdminStats(context),
@@ -197,7 +197,7 @@ class HomeScreen extends StatelessWidget {
   Widget _buildStaffStats(BuildContext context) {
     return Consumer<CustomerProvider>(
       builder: (context, provider, child) {
-        final customers = provider.allCustomers;
+        final List<Customer> customers = provider.allCustomers;
         final pendingCount = customers.where((c) => c.status != CollectionStatus.completed).length;
         final completedCount = customers.where((c) => c.status == CollectionStatus.completed).length;
         
@@ -242,30 +242,43 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReadyBanner() {
-    final String lastSync = DateFormat('HH:mm a').format(DateTime.now().subtract(const Duration(minutes: 45)));
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(15)),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.green),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Dữ liệu đã sẵn sàng', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text('Đồng bộ lần cuối: $lastSync', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
+  Widget _buildReadyBanner(BuildContext context) {
+    final provider = Provider.of<CustomerProvider>(context);
+    final String lastSync = provider.lastSyncTime != null 
+        ? DateFormat('HH:mm a').format(provider.lastSyncTime!)
+        : 'Chưa đồng bộ';
+        
+    return InkWell(
+      onTap: () => provider.refresh(),
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(15)),
+        child: Row(
+          children: [
+            Icon(provider.isLoading ? Icons.sync : Icons.check_circle, color: Colors.green),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(provider.isLoading ? 'Đang cập nhật...' : 'Dữ liệu đã sẵn sàng', 
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text('Đồng bộ lần cuối: $lastSync', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.green)),
-            child: const Text('Ổn định', style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
-          ),
-        ],
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white, 
+                borderRadius: BorderRadius.circular(20), 
+                border: Border.all(color: Colors.green)
+              ),
+              child: Text(provider.isLoading ? 'Đang tải' : 'Ổn định', 
+                style: const TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -309,7 +322,8 @@ class HomeScreen extends StatelessWidget {
   Widget _buildFunctionGrid(BuildContext context, String role) {
     return Consumer<CustomerProvider>(
       builder: (context, provider, child) {
-        final pendingCount = provider.allCustomers.where((c) => c.status != CollectionStatus.completed).length;
+        final List<Customer> customers = provider.allCustomers;
+        final pendingCount = customers.where((c) => c.status != CollectionStatus.completed).length;
         
         List<Widget> cards = [];
         

@@ -15,98 +15,33 @@ class Bill {
   final String? imagePath;
   final bool isSynced;
 
-  Bill({
-    this.id,
-    required this.customerId,
-    this.customerName,
-    this.customerCode,
-    required this.billCode,
-    required this.date,
-    required this.oldReading,
-    required this.newReading,
-    required this.consumption,
-    required this.unitPrice,
-    required this.amount,
-    required this.vat,
-    required this.totalAmount,
-    this.imagePath,
-    this.isSynced = false,
-  });
+  Bill({this.id, required this.customerId, this.customerName, this.customerCode, required this.billCode, required this.date, required this.oldReading, required this.newReading, required this.consumption, required this.unitPrice, required this.amount, required this.vat, required this.totalAmount, this.imagePath, this.isSynced = false});
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'customerId': customerId,
-      'customerName': customerName,
-      'customerCode': customerCode,
-      'billCode': billCode,
-      'date': date.toIso8601String(),
-      'oldReading': oldReading,
-      'newReading': newReading,
-      'consumption': consumption,
-      'unitPrice': unitPrice,
-      'amount': amount,
-      'vat': vat,
-      'totalAmount': totalAmount,
-      'imagePath': imagePath,
-      'isSynced': isSynced ? 1 : 0,
-    };
-  }
+  Map<String, dynamic> toMap() => {
+    'id': id, 'customerId': customerId, 'customerName': customerName, 'customerCode': customerCode, 'billCode': billCode, 'date': date.toIso8601String(), 'oldReading': oldReading, 'newReading': newReading, 'consumption': consumption, 'unitPrice': unitPrice, 'amount': amount, 'vat': vat, 'totalAmount': totalAmount, 'imagePath': imagePath, 'isSynced': isSynced ? 1 : 0,
+  };
 
-  factory Bill.fromMap(Map<String, dynamic> map) {
-    final rawSynced = map['isSynced'];
+  factory Bill.fromMap(Map<String, dynamic> map) => Bill(
+    id: map['id'],
+    customerId: map['customerId'],
+    customerName: map['customerName'],
+    customerCode: map['customerCode'],
+    billCode: map['billCode'] ?? '',
+    date: DateTime.parse(map['date']),
+    oldReading: map['oldReading'],
+    newReading: map['newReading'],
+    consumption: (map['consumption'] as num).toDouble(),
+    unitPrice: (map['unitPrice'] as num).toDouble(),
+    amount: (map['amount'] as num).toDouble(),
+    vat: (map['vat'] as num).toDouble(),
+    totalAmount: (map['totalAmount'] as num).toDouble(),
+    imagePath: map['imagePath'],
+    isSynced: map['isSynced'] == 1 || map['isSynced'] == true,
+  );
+
+  Bill copyWith({int? id, int? customerId, String? customerName, String? customerCode, String? billCode, DateTime? date, int? oldReading, int? newReading, double? consumption, double? unitPrice, double? amount, double? vat, double? totalAmount, String? imagePath, bool? isSynced}) {
     return Bill(
-      id: map['id'],
-      customerId: map['customerId'],
-      customerName: map['customerName'],
-      customerCode: map['customerCode'],
-      billCode: map['billCode'] ?? '',
-      date: DateTime.parse(map['date']),
-      oldReading: map['oldReading'],
-      newReading: map['newReading'],
-      consumption: map['consumption'].toDouble(),
-      unitPrice: map['unitPrice'].toDouble(),
-      amount: map['amount'].toDouble(),
-      vat: map['vat'].toDouble(),
-      totalAmount: map['totalAmount'].toDouble(),
-      imagePath: map['imagePath'],
-      isSynced: rawSynced == true || rawSynced == 1,
-    );
-  }
-
-  Bill copyWith({
-    int? id,
-    int? customerId,
-    String? customerName,
-    String? customerCode,
-    String? billCode,
-    DateTime? date,
-    int? oldReading,
-    int? newReading,
-    double? consumption,
-    double? unitPrice,
-    double? amount,
-    double? vat,
-    double? totalAmount,
-    String? imagePath,
-    bool? isSynced,
-  }) {
-    return Bill(
-      id: id ?? this.id,
-      customerId: customerId ?? this.customerId,
-      customerName: customerName ?? this.customerName,
-      customerCode: customerCode ?? this.customerCode,
-      billCode: billCode ?? this.billCode,
-      date: date ?? this.date,
-      oldReading: oldReading ?? this.oldReading,
-      newReading: newReading ?? this.newReading,
-      consumption: consumption ?? this.consumption,
-      unitPrice: unitPrice ?? this.unitPrice,
-      amount: amount ?? this.amount,
-      vat: vat ?? this.vat,
-      totalAmount: totalAmount ?? this.totalAmount,
-      imagePath: imagePath ?? this.imagePath,
-      isSynced: isSynced ?? this.isSynced,
+      id: id ?? this.id, customerId: customerId ?? this.customerId, customerName: customerName ?? this.customerName, customerCode: customerCode ?? this.customerCode, billCode: billCode ?? this.billCode, date: date ?? this.date, oldReading: oldReading ?? this.oldReading, newReading: newReading ?? this.newReading, consumption: consumption ?? this.consumption, unitPrice: unitPrice ?? this.unitPrice, amount: amount ?? this.amount, vat: vat ?? this.vat, totalAmount: totalAmount ?? this.totalAmount, imagePath: imagePath ?? this.imagePath, isSynced: isSynced ?? this.isSynced,
     );
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/billing_provider.dart';
 import '../../providers/customer_provider.dart';
+import '../../models/bill.dart';
+import '../../models/customer.dart';
 import '../customer/receipt_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -23,19 +25,24 @@ class HistoryScreen extends StatelessWidget {
       ),
       body: Consumer<BillingProvider>(
         builder: (context, provider, child) {
-          return FutureBuilder(
+          return FutureBuilder<List<Bill>>(
             future: provider.getAllBills(),
             builder: (context, snapshot) {
-              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
               
-              final bills = snapshot.data!;
-              if (bills.isEmpty) return const Center(child: Text('Chưa có lịch sử thu tiền nào.'));
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(child: Text('Chưa có lịch sử thu tiền nào.'));
+              }
+
+              final List<Bill> bills = snapshot.data!;
 
               return ListView.builder(
                 padding: const EdgeInsets.all(10),
                 itemCount: bills.length,
                 itemBuilder: (context, index) {
-                  final bill = bills[index];
+                  final Bill bill = bills[index];
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 5),
                     elevation: 0,
@@ -46,15 +53,20 @@ class HistoryScreen extends StatelessWidget {
                     ),
                     child: InkWell(
                       onTap: () {
-                        final customer = Provider.of<CustomerProvider>(context, listen: false)
-                            .allCustomers
-                            .firstWhere((c) => c.id == bill.customerId);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ReceiptScreen(customer: customer, bill: bill),
-                          ),
-                        );
+                        try {
+                          final List<Customer> customers = Provider.of<CustomerProvider>(context, listen: false).allCustomers;
+                          final Customer customer = customers.firstWhere((c) => c.id == bill.customerId);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ReceiptScreen(customer: customer, bill: bill),
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Không tìm thấy thông tin khách hàng')),
+                          );
+                        }
                       },
                       borderRadius: BorderRadius.circular(15),
                       child: Padding(
